@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ЛПР.finder — поиск контактов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0c0a;
+    --surface: #16140f;
+    --surface-2: #1d1a14;
+    --border: #2a261f;
+    --border-bright: #3d382d;
+    --text: #f5efe0;
+    --text-muted: #8a8275;
+    --text-dim: #5a564d;
+    --accent: #d4ff3a;
+    --accent-dim: #9ac421;
+    --blue: #7dd3fc;
+    --amber: #fbbf24;
+    --green: #86efac;
+    --red: #fca5a5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px; line-height: 1.5; min-height: 100vh;
+  }
+  body {
+    background-image:
+      radial-gradient(ellipse at top left, rgba(212, 255, 58, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(125, 211, 252, 0.03) 0%, transparent 50%);
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+  .brand { display: flex; align-items: baseline; gap: 14px; }
+  .brand h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .brand .dot { color: var(--accent); }
+  .brand .subtitle {
+    color: var(--text-dim); font-size: 11px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .header-actions { display: flex; align-items: center; gap: 12px; }
+  .last-update {
+    font-size: 12px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Buttons */
+  button, .btn {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border-bright);
+    padding: 8px 14px; border-radius: 6px;
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  button:hover, .btn:hover { background: var(--surface-2); border-color: var(--accent-dim); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary {
+    background: var(--accent); color: #0a0a0a;
+    border-color: var(--accent); font-weight: 600;
+  }
+  button.primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
+  button.primary:disabled { background: var(--accent-dim); }
+  button.blue {
+    background: var(--blue); color: #0a0a0a;
+    border-color: var(--blue); font-weight: 600;
+  }
+  button.blue:hover { background: #38bdf8; border-color: #38bdf8; }
+  button.icon-only {
+    padding: 8px; width: 34px; height: 34px; justify-content: center;
+  }
+  button.ghost {
+    background: transparent; border-color: transparent;
+    color: var(--text-muted); padding: 6px 10px;
+  }
+  button.ghost:hover { color: var(--text); background: var(--surface-2); }
+
+  /* Main */
+  main { padding: 24px 28px; max-width: 1600px; margin: 0 auto; }
+
+  /* Stats */
+  .stats {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .stat-card.highlight { border-color: var(--accent-dim); }
+  .stat-label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 26px; font-weight: 600;
+  }
+  .stat-card.highlight .stat-value { color: var(--accent); }
+
+  /* Filters */
+  .filters {
+    display: flex; gap: 10px; margin-bottom: 14px;
+    flex-wrap: wrap; align-items: center;
+  }
+  .search-wrap { flex: 1; min-width: 240px; position: relative; }
+  .search-wrap svg {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); color: var(--text-dim);
+  }
+  .search-wrap input {
+    width: 100%; padding: 9px 14px 9px 36px;
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px;
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--accent-dim); }
+  .search-wrap .kbd {
+    position: absolute; right: 10px; top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface-2); color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  }
+  select {
+    padding: 9px 30px 9px 12px;
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-radius: 6px; color: var(--text); font-family: inherit;
+    font-size: 13px; cursor: pointer; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8275' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  select:focus { outline: none; border-color: var(--accent-dim); }
+
+  /* Selection bar */
+  .selection-bar {
+    background: var(--surface);
+    border: 1px solid var(--accent-dim); border-radius: 8px;
+    padding: 10px 16px; margin-bottom: 12px;
+    display: none; align-items: center; gap: 10px;
+    animation: slideDown 0.18s ease;
+    position: sticky; top: 76px; z-index: 9;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    flex-wrap: wrap;
+  }
+  .selection-bar.visible { display: flex; }
+  .selection-bar .count { font-size: 13px; color: var(--text); }
+  .selection-bar .count strong {
+    color: var(--accent); font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .selection-bar .spacer { flex: 1; min-width: 1px; }
+  .selection-bar .divider {
+    width: 1px; height: 22px; background: var(--border-bright); margin: 0 4px;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Row checkbox */
+  .row-check {
+    appearance: none; -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border-bright); border-radius: 4px;
+    background: var(--bg); cursor: pointer;
+    position: relative; transition: all 0.12s ease;
+    flex-shrink: 0; vertical-align: middle;
+  }
+  .row-check:hover { border-color: var(--accent-dim); }
+  .row-check:checked { background: var(--accent); border-color: var(--accent); }
+  .row-check:checked::after {
+    content: ''; position: absolute; left: 4px; top: 0;
+    width: 5px; height: 10px;
+    border: solid #0a0a0a; border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  td.check-cell, th.check-cell {
+    width: 36px; padding-right: 0; text-align: center;
+  }
+
+  tr.selected { background: rgba(212, 255, 58, 0.04); }
+  tr.selected:hover { background: rgba(212, 255, 58, 0.08); }
+  tr.opened { background: rgba(125, 211, 252, 0.05); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface-2); }
+  th {
+    text-align: left; padding: 12px 16px;
+    font-weight: 500; font-size: 11px;
+    color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  th.sortable { cursor: pointer; transition: color 0.12s; }
+  th.sortable:hover { color: var(--text); }
+  th.sortable .sort-arrow {
+    display: inline-block; margin-left: 4px; opacity: 0.4; font-size: 10px;
+  }
+  th.sortable.active .sort-arrow { opacity: 1; color: var(--accent); }
+  td {
+    padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background 0.1s; cursor: default; }
+  tbody tr:hover { background: var(--surface-2); }
+  tbody tr td:not(.check-cell):not(.status-cell) {
+    cursor: pointer;
+  }
+
+  .company-cell { min-width: 220px; }
+  .company-name { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .vacancy-name { font-size: 12px; color: var(--text-muted); }
+  .company-rubric {
+    font-size: 11px; color: var(--accent-dim); margin-top: 4px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .company-rubric::before { content: '🏷'; opacity: 0.5; font-size: 10px; }
+
+  .contact-cell { min-width: 200px; }
+  .contact-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 4px; font-size: 12.5px;
+  }
+  .contact-row:last-child { margin-bottom: 0; }
+  .contact-row .icon { color: var(--text-dim); font-size: 11px; width: 14px; }
+  .contact-row .copyable {
+    cursor: pointer; color: var(--text);
+    border-bottom: 1px dashed transparent; transition: all 0.12s;
+  }
+  .contact-row .copyable:hover {
+    color: var(--accent); border-bottom-color: var(--accent-dim);
+  }
+  .contact-row a { color: var(--blue); text-decoration: none; }
+  .contact-row a:hover { text-decoration: underline; }
+  .contact-address {
+    font-size: 11px; color: var(--text-dim); margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  .director-cell { min-width: 180px; }
+  .director-name { font-weight: 500; }
+  .director-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .director-bin {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: var(--text-dim); margin-top: 4px; cursor: pointer;
+  }
+  .director-bin:hover { color: var(--accent); }
+
+  /* Source badges */
+  .sources { display: flex; flex-wrap: wrap; gap: 4px; }
+  .source-badge {
+    display: inline-block; padding: 2px 7px; border-radius: 3px;
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+    background: var(--surface-2); border: 1px solid var(--border-bright);
+    color: var(--text-muted); text-decoration: none;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .source-badge.hh  { color: var(--blue);  border-color: rgba(125, 211, 252, 0.3); }
+  .source-badge.gis { color: var(--green); border-color: rgba(134, 239, 172, 0.3); }
+  .source-badge.kgd, .source-badge.lpr {
+    color: var(--amber); border-color: rgba(251, 191, 36, 0.3);
+  }
+  a.source-badge:hover { background: var(--bg); border-color: currentColor; }
+
+  /* Status */
+  .status-select { padding: 4px 22px 4px 8px; font-size: 12px; min-width: 110px; }
+  .status-new         { color: var(--blue); }
+  .status-in_progress { color: var(--amber); }
+  .status-contacted   { color: var(--green); }
+  .status-skip        { color: var(--text-dim); }
+
+  /* Position badge */
+  .position-badge {
+    display: inline-block; padding: 2px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; margin-left: 6px;
+  }
+  .position-badge.rop { background: rgba(212, 255, 58, 0.15); color: var(--accent); }
+  .position-badge.hr  { background: rgba(125, 211, 252, 0.15); color: var(--blue); }
+
+  /* Empty / Loading */
+  .empty-state, .loading-state {
+    padding: 60px 20px; text-align: center; color: var(--text-muted);
+  }
+  .empty-state h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 16px; margin-bottom: 8px; color: var(--text);
+  }
+  .empty-state p { font-size: 13px; margin-bottom: 16px; }
+  .skeleton-row {
+    height: 56px;
+    background: linear-gradient(90deg,
+      var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+    border-bottom: 1px solid var(--border);
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-radius: 10px; padding: 24px;
+    max-width: 520px; width: 100%; margin: 16px;
+  }
+  .modal h2 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 16px; font-weight: 600; margin-bottom: 16px;
+  }
+  .modal .field { margin-bottom: 14px; }
+  .modal label {
+    display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;
+  }
+  .modal input {
+    width: 100%; padding: 8px 12px;
+    background: var(--bg); border: 1px solid var(--border-bright);
+    border-radius: 5px; color: var(--text); font-family: inherit; font-size: 13px;
+  }
+  .modal input:focus { outline: none; border-color: var(--accent-dim); }
+  .modal .actions {
+    display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;
+  }
+
+  /* ----- DETAILS DRAWER (side panel) ----- */
+  .drawer-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
+    display: none; z-index: 90;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .drawer-overlay.open { display: block; opacity: 1; }
+
+  .drawer {
+    position: fixed; top: 0; right: 0;
+    width: 480px; max-width: 100vw; height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border-bright);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
+    z-index: 91;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px;
+  }
+  .drawer-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 16px; font-weight: 600;
+    line-height: 1.3; flex: 1;
+  }
+  .drawer-close {
+    background: transparent; border: none; color: var(--text-muted);
+    padding: 4px; cursor: pointer; flex-shrink: 0;
+  }
+  .drawer-close:hover { color: var(--text); }
+  .drawer-body {
+    padding: 20px 24px; flex: 1; overflow-y: auto;
+  }
+  .drawer-section { margin-bottom: 22px; }
+  .drawer-section h3 {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 10px; font-weight: 500;
+  }
+  .drawer-field {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .drawer-field:last-child { border-bottom: none; }
+  .drawer-field .label {
+    font-size: 11px; color: var(--text-dim);
+  }
+  .drawer-field .value {
+    font-size: 14px; color: var(--text);
+    word-break: break-word;
+  }
+  .drawer-field .value.empty { color: var(--text-dim); font-style: italic; }
+  .drawer-field .value.copyable {
+    cursor: pointer; border-bottom: 1px dashed transparent;
+  }
+  .drawer-field .value.copyable:hover {
+    color: var(--accent); border-bottom-color: var(--accent-dim);
+  }
+  .drawer-field .value a { color: var(--blue); text-decoration: none; }
+  .drawer-field .value a:hover { text-decoration: underline; }
+  .drawer-actions {
+    padding: 14px 24px; border-top: 1px solid var(--border);
+    display: flex; gap: 8px;
+  }
+  .drawer-actions button { flex: 1; justify-content: center; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border-bright);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px; border-radius: 6px; font-size: 13px;
+    z-index: 200; opacity: 0; transform: translateY(10px);
+    transition: all 0.25s ease; pointer-events: none; max-width: 360px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-left-color: var(--red); }
+  .toast.success { border-left-color: var(--green); }
+  .spin { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Mobile */
+  @media (max-width: 1200px) {
+    .stats { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    main { padding: 16px; }
+    header { padding: 14px 16px; }
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 900px; }
+    .search-wrap .kbd { display: none; }
+    .drawer { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>ЛПР<span class="dot">.</span>finder</h1>
+    <span class="subtitle">Внутренний инструмент · v3</span>
+  </div>
+  <div class="header-actions">
+    <span class="last-update"><span class="pulse"></span><span id="lastUpdate">никогда</span></span>
+    <button class="icon-only" id="exportBtn" title="Экспорт в CSV (текущий фильтр)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="icon-only" id="settingsBtn" title="Настройки">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="primary" id="refreshBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="refreshIcon"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+      <span id="refreshText">Запустить парсинг</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat-card highlight">
+      <div class="stat-label">Новые сегодня</div>
+      <div class="stat-value" id="statToday">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">За неделю</div>
+      <div class="stat-value" id="statWeek">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">В работе</div>
+      <div class="stat-value" id="statInProgress">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Всего</div>
+      <div class="stat-value" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">С телефоном</div>
+      <div class="stat-value" id="statWithPhone">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">С ЛПР</div>
+      <div class="stat-value" id="statWithDirector">—</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Поиск по компании, вакансии, ФИО, БИН...">
+      <span class="kbd">⌘K</span>
+    </div>
+    <select id="filterPosition"></select>
+    <select id="filterCity"><option value="">Все города</option></select>
+    <select id="filterRubric"><option value="">Все рубрики</option></select>
+    <select id="filterStatus">
+      <option value="">Все статусы</option>
+      <option value="new">Новые</option>
+      <option value="in_progress">В работе</option>
+      <option value="contacted">Связались</option>
+      <option value="skip">Пропустить</option>
+    </select>
+    <select id="filterHasPhone">
+      <option value="">С контактами и без</option>
+      <option value="phone">Только с телефоном</option>
+      <option value="email">Только с email</option>
+      <option value="director">Только с ЛПР</option>
+    </select>
+  </div>
+
+  <div class="selection-bar" id="selectionBar">
+    <span class="count">Выбрано: <strong id="selectionCount">0</strong></span>
+    <button onclick="clearSelection()" class="ghost">Снять</button>
+    <span class="divider"></span>
+    <select id="bulkStatus" onchange="bulkSetStatus(this.value); this.value=''">
+      <option value="">Сменить статус...</option>
+      <option value="new">Новый</option>
+      <option value="in_progress">В работе</option>
+      <option value="contacted">Связались</option>
+      <option value="skip">Пропустить</option>
+    </select>
+    <span class="spacer"></span>
+    <button class="blue" id="lprBtn" onclick="findLprSelected()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span id="lprText">Найти ЛПР</span>
+    </button>
+    <button class="primary" id="enrichBtn" onclick="enrichSelected()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="enrichIcon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M21 3v6h-6"/></svg>
+      <span id="enrichText">Обогатить через 2GIS</span>
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="check-cell"><input type="checkbox" class="row-check" id="selectAllCheck" onchange="toggleSelectAll()"></th>
+          <th class="sortable" data-sort="company">Компания / Вакансия <span class="sort-arrow">↕</span></th>
+          <th class="sortable" data-sort="city">Город <span class="sort-arrow">↕</span></th>
+          <th>Контакты</th>
+          <th>ЛПР</th>
+          <th>Источники</th>
+          <th class="sortable active" data-sort="posted">Дата <span class="sort-arrow">↓</span></th>
+          <th class="sortable" data-sort="status">Статус <span class="sort-arrow">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="leadsBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <h3>Ничего не найдено</h3>
+      <p>Попробуй сменить фильтры или запустить парсинг свежих вакансий.</p>
+      <button onclick="resetFilters()">Сбросить фильтры</button>
+    </div>
+  </div>
+</main>
+
+<!-- DETAILS DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawerTitle"></div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Закрыть">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-actions" id="drawerActions"></div>
+</aside>
+
+<!-- Settings modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>Настройки</h2>
+    <div class="field">
+      <label>GET — список лидов</label>
+      <input type="text" id="wh_leads" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>POST — запустить парсинг</label>
+      <input type="text" id="wh_refresh" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>POST — обновить статус</label>
+      <input type="text" id="wh_status" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>GET — статистика</label>
+      <input type="text" id="wh_stats" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>POST — обогатить через 2GIS</label>
+      <input type="text" id="wh_enrich" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>POST — найти ЛПР</label>
+      <input type="text" id="wh_lpr_input" placeholder="https://...">
+    </div>
+    <div class="actions">
+      <button onclick="closeModal()">Отмена</button>
+      <button class="primary" onclick="saveSettings()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   КОНФИГ
+   ========================================================================= */
+const DEFAULT_CONFIG = {
+  wh_leads:   'https://amiraskar2308.app.n8n.cloud/webhook/leads',
+  wh_refresh: 'https://amiraskar2308.app.n8n.cloud/webhook/refresh',
+  wh_status:  'https://amiraskar2308.app.n8n.cloud/webhook/lead-status',
+  wh_stats:   'https://amiraskar2308.app.n8n.cloud/webhook/stats',
+  wh_enrich:  'https://amiraskar2308.app.n8n.cloud/webhook/enrich-2gis',
+  wh_lpr:     'https://amiraskar2308.app.n8n.cloud/webhook/find-lpr',
+};
+
+const SORT_OPTIONS = {
+  posted:  l => l.posted || '',
+  company: l => (l.company || '').toLowerCase(),
+  city:    l => (l.city || '').toLowerCase(),
+  status:  l => ['new','in_progress','contacted','skip'].indexOf(l.status || 'new'),
+};
+
+const POSITION_LABELS = { rop: 'РОП / Руководитель продаж', hr: 'HR / Рекрутер', other: 'Другое' };
+const STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', contacted: 'Связались', skip: 'Пропустить' };
+
+/* =========================================================================
+   СОСТОЯНИЕ
+   ========================================================================= */
+let config = loadConfig();
+let allLeads = [];
+let serverStats = null;
+let filters = { search:'', position:'', city:'', rubric:'', status:'', has:'' };
+let selectedIds = new Set();
+let sortState = { column: 'posted', direction: 'desc' };
+let openLeadId = null;
+
+/* =========================================================================
+   ХЕЛПЕРЫ
+   ========================================================================= */
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem('lpr_config');
+    let cfg = saved ? { ...DEFAULT_CONFIG, ...JSON.parse(saved) } : { ...DEFAULT_CONFIG };
+    if (cfg.wh_enrich && cfg.wh_enrich.endsWith('/webhook/enrich-selected')) {
+      cfg.wh_enrich = cfg.wh_enrich.replace('/enrich-selected', '/enrich-2gis');
+      localStorage.setItem('lpr_config', JSON.stringify(cfg));
+    }
+    return cfg;
+  } catch { return { ...DEFAULT_CONFIG }; }
+}
+function saveConfig() {
+  try { localStorage.setItem('lpr_config', JSON.stringify(config)); } catch {}
+}
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function debounce(fn, ms) {
+  let t;
+  return function(...args) {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+function normUrl(u) {
+  if (!u) return null;
+  return /^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^\/+/, '');
+}
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(`Скопировано: ${text}`, 'success');
+  } catch (e) {
+    toast('Не удалось скопировать', true);
+  }
+}
+
+let toastTimer = null;
+function toast(msg, variant) {
+  const el = document.getElementById('toast');
+  clearTimeout(toastTimer);
+  el.textContent = msg;
+  let cls = 'toast show';
+  if (variant === true || variant === 'error') cls += ' error';
+  else if (variant === 'success')              cls += ' success';
+  el.className = cls;
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* =========================================================================
+   SETTINGS UI
+   ========================================================================= */
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+function openSettings() {
+  document.getElementById('wh_leads').value     = config.wh_leads   || '';
+  document.getElementById('wh_refresh').value   = config.wh_refresh || '';
+  document.getElementById('wh_status').value    = config.wh_status  || '';
+  document.getElementById('wh_stats').value     = config.wh_stats   || '';
+  document.getElementById('wh_enrich').value    = config.wh_enrich  || '';
+  document.getElementById('wh_lpr_input').value = config.wh_lpr     || '';
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeModal() { document.getElementById('settingsModal').classList.remove('open'); }
+function saveSettings() {
+  config.wh_leads   = document.getElementById('wh_leads').value.trim();
+  config.wh_refresh = document.getElementById('wh_refresh').value.trim();
+  config.wh_status  = document.getElementById('wh_status').value.trim();
+  config.wh_stats   = document.getElementById('wh_stats').value.trim();
+  config.wh_enrich  = document.getElementById('wh_enrich').value.trim();
+  config.wh_lpr     = document.getElementById('wh_lpr_input').value.trim();
+  saveConfig();
+  closeModal();
+  toast('Настройки сохранены', 'success');
+  fetchLeads();
+}
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target.id === 'settingsModal') closeModal();
+});
+
+/* =========================================================================
+   API
+   ========================================================================= */
+async function fetchLeads() {
+  if (!config.wh_leads) { allLeads = getMockData(); render(); return; }
+  showLoadingSkeleton();
+  try {
+    const res = await fetch(config.wh_leads);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    allLeads = Array.isArray(data) ? data : (data.leads || []);
+    setLastUpdate();
+    render();
+    fetchStats();
+  } catch (e) {
+    toast('Ошибка загрузки: ' + e.message, true);
+    allLeads = getMockData();
+    render();
+  }
+}
+async function fetchStats() {
+  if (!config.wh_stats) { serverStats = null; return; }
+  try {
+    const res = await fetch(config.wh_stats);
+    if (!res.ok) return;
+    serverStats = await res.json();
+    updateStats();
+  } catch (e) { serverStats = null; }
+}
+async function triggerRefresh() {
+  if (!config.wh_refresh) { toast('Сначала укажи webhook URL в настройках ⚙', true); return; }
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  const text = document.getElementById('refreshText');
+  const originalText = text.textContent;
+  btn.disabled = true;
+  icon.classList.add('spin');
+  text.textContent = 'Парсинг идёт...';
+  try {
+    await fetch(config.wh_refresh, { method: 'POST' });
+    toast('Парсинг запущен! Через минуту обновлю данные.', 'success');
+    setTimeout(fetchLeads, 60000);
+  } catch (e) {
+    toast('Ошибка запуска: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    icon.classList.remove('spin');
+    text.textContent = originalText;
+  }
+}
+async function updateStatus(id, newStatus) {
+  if (!config.wh_status) { toast('Webhook для статусов не настроен ⚙', true); return; }
+  try {
+    await fetch(config.wh_status, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: newStatus })
+    });
+  } catch (e) { toast('Ошибка: ' + e.message, true); }
+}
+
+/* =========================================================================
+   SELECTION
+   ========================================================================= */
+function toggleSelection(id, checked) {
+  const sid = String(id);
+  if (checked) selectedIds.add(sid);
+  else         selectedIds.delete(sid);
+  const cb = document.querySelector(`.row-check[data-id="${CSS.escape(sid)}"]`);
+  if (cb) cb.closest('tr')?.classList.toggle('selected', checked);
+  updateSelectionBar();
+}
+function toggleSelectAll() {
+  const master = document.getElementById('selectAllCheck');
+  const visible = document.querySelectorAll('#leadsBody .row-check');
+  visible.forEach(cb => {
+    cb.checked = master.checked;
+    const id = cb.dataset.id;
+    if (master.checked) selectedIds.add(id);
+    else                selectedIds.delete(id);
+    cb.closest('tr')?.classList.toggle('selected', master.checked);
+  });
+  updateSelectionBar();
+}
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('#leadsBody .row-check').forEach(cb => {
+    cb.checked = false;
+    cb.closest('tr')?.classList.remove('selected');
+  });
+  const master = document.getElementById('selectAllCheck');
+  if (master) master.checked = false;
+  updateSelectionBar();
+}
+function updateSelectionBar() {
+  const bar = document.getElementById('selectionBar');
+  const count = document.getElementById('selectionCount');
+  if (selectedIds.size > 0) {
+    bar.classList.add('visible');
+    count.textContent = selectedIds.size;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+/* Массовая смена статуса для выбранных лидов */
+async function bulkSetStatus(newStatus) {
+  if (!newStatus || selectedIds.size === 0) return;
+  const ids = [...selectedIds];
+  if (!confirm(`Сменить статус на "${STATUS_LABELS[newStatus]}" для ${ids.length} лидов?`)) return;
+
+  // Оптимистично обновляем локальное состояние
+  for (const id of ids) {
+    const lead = allLeads.find(l => String(l.id) === id);
+    if (lead) lead.status = newStatus;
+  }
+  render();
+  toast(`Обновляю статусы (${ids.length})...`);
+
+  // Отправляем по очереди — webhook принимает по одному id за раз
+  let ok = 0, failed = 0;
+  for (const id of ids) {
+    try {
+      const res = await fetch(config.wh_status, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus })
+      });
+      if (res.ok) ok++; else failed++;
+    } catch { failed++; }
+  }
+  toast(failed === 0
+    ? `Готово: обновлено ${ok} лидов`
+    : `${ok} обновлено, ${failed} с ошибкой`,
+    failed === 0 ? 'success' : true);
+  clearSelection();
+  fetchStats();
+}
+
+/* =========================================================================
+   ENRICHMENT
+   ========================================================================= */
+async function callEnrichment(url, btnId, textId, iconId, labelInProgress) {
+  if (!url) { toast('Webhook не настроен ⚙', true); return; }
+  if (selectedIds.size === 0) return;
+
+  const btn = document.getElementById(btnId);
+  const text = document.getElementById(textId);
+  const icon = iconId ? document.getElementById(iconId) : null;
+  const originalText = text.textContent;
+  const count = selectedIds.size;
+
+  btn.disabled = true;
+  if (icon) icon.classList.add('spin');
+  text.textContent = `${labelInProgress} (${count})...`;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [...selectedIds] })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    toast(`Готово! Обогащено: ${count} компаний`, 'success');
+    clearSelection();
+    fetchLeads();
+  } catch (e) {
+    toast('Ошибка: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    if (icon) icon.classList.remove('spin');
+    text.textContent = originalText;
+  }
+}
+function enrichSelected() {
+  callEnrichment(config.wh_enrich, 'enrichBtn', 'enrichText', 'enrichIcon', 'Обогащаем');
+}
+function findLprSelected() {
+  callEnrichment(config.wh_lpr, 'lprBtn', 'lprText', null, 'Ищем');
+}
+document.getElementById('refreshBtn').addEventListener('click', triggerRefresh);
+
+/* =========================================================================
+   ФИЛЬТРАЦИЯ / СОРТИРОВКА / РЕНДЕР
+   ========================================================================= */
+function applyFilters(leads) {
+  const q = filters.search.toLowerCase().trim();
+  return leads.filter(l => {
+    if (q) {
+      const hay = `${l.company} ${l.vacancy} ${l.director || ''} ${l.city || ''} ${l.bin || ''} ${l.rubric || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (filters.position && l.position_type !== filters.position) return false;
+    if (filters.city && l.city !== filters.city) return false;
+    if (filters.rubric && l.rubric !== filters.rubric) return false;
+    if (filters.status && l.status !== filters.status) return false;
+    if (filters.has === 'phone'    && !l.phone) return false;
+    if (filters.has === 'email'    && !l.email) return false;
+    if (filters.has === 'director' && !l.director) return false;
+    return true;
+  });
+}
+function applySort(leads) {
+  const fn = SORT_OPTIONS[sortState.column];
+  if (!fn) return leads;
+  const dir = sortState.direction === 'asc' ? 1 : -1;
+  return [...leads].sort((a, b) => {
+    const va = fn(a), vb = fn(b);
+    if (va < vb) return -1 * dir;
+    if (va > vb) return  1 * dir;
+    return 0;
+  });
+}
+function showLoadingSkeleton() {
+  const tbody = document.getElementById('leadsBody');
+  tbody.innerHTML = Array.from({length: 6}).map(() =>
+    `<tr><td colspan="8" class="skeleton-row"></td></tr>`).join('');
+  document.getElementById('emptyState').style.display = 'none';
+}
+function render() {
+  const filtered = applySort(applyFilters(allLeads));
+  const tbody = document.getElementById('leadsBody');
+  const empty = document.getElementById('emptyState');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    tbody.innerHTML = filtered.map(rowHtml).join('');
+  }
+  updateStats();
+  updateCityFilter();
+  updatePositionFilter();
+  updateRubricFilter();
+  updateSortIndicators();
+}
+function rowHtml(l) {
+  const sid = String(l.id);
+  const isSelected = selectedIds.has(sid);
+  const isOpen = openLeadId === sid;
+  const posBadge = l.position_type && l.position_type !== 'other'
+    ? `<span class="position-badge ${esc(l.position_type)}">${esc(l.position_type)}</span>` : '';
+  return `
+    <tr class="${isSelected ? 'selected' : ''}${isOpen ? ' opened' : ''}" data-id="${esc(sid)}">
+      <td class="check-cell"><input type="checkbox" class="row-check" data-id="${esc(sid)}" ${isSelected ? 'checked' : ''} onchange="toggleSelection('${esc(sid)}', this.checked); event.stopPropagation();" onclick="event.stopPropagation()"></td>
+      <td class="company-cell" onclick="openDrawer('${esc(sid)}')">
+        <div class="company-name">${esc(l.company)}${posBadge}</div>
+        <div class="vacancy-name">${esc(l.vacancy || '')}</div>
+        ${l.rubric ? `<div class="company-rubric">${esc(l.rubric)}</div>` : ''}
+      </td>
+      <td onclick="openDrawer('${esc(sid)}')">${esc(l.city || '—')}</td>
+      <td class="contact-cell" onclick="openDrawer('${esc(sid)}')">
+        ${l.phone   ? `<div class="contact-row"><span class="icon">☏</span><span class="copyable mono" onclick="copyToClipboard('${esc(l.phone)}'); event.stopPropagation();">${esc(l.phone)}</span></div>` : ''}
+        ${l.email   ? `<div class="contact-row"><span class="icon">@</span><span class="copyable" onclick="copyToClipboard('${esc(l.email)}'); event.stopPropagation();">${esc(l.email)}</span></div>` : ''}
+        ${l.website ? `<div class="contact-row"><span class="icon">↗</span><a href="${esc(normUrl(l.website))}" target="_blank" onclick="event.stopPropagation()">${esc(l.website)}</a></div>` : ''}
+        ${(!l.phone && !l.email && !l.website) ? '<span style="color:var(--text-dim)">—</span>' : ''}
+        ${l.address ? `<div class="contact-address">${esc(l.address)}</div>` : ''}
+      </td>
+      <td class="director-cell" onclick="openDrawer('${esc(sid)}')">
+        ${l.director
+          ? `<div class="director-name">${esc(l.director)}</div>${l.director_position ? `<div class="director-meta">${esc(l.director_position)}</div>` : ''}`
+          : '<span style="color:var(--text-dim)">не найдено</span>'}
+        ${l.bin ? `<div class="director-bin" onclick="copyToClipboard('${esc(l.bin)}'); event.stopPropagation();" title="БИН (клик скопирует)">БИН ${esc(l.bin)}</div>` : ''}
+      </td>
+      <td onclick="openDrawer('${esc(sid)}')"><div class="sources">${renderSources(l)}</div></td>
+      <td class="mono" style="color:var(--text-muted)" onclick="openDrawer('${esc(sid)}')">${esc(l.posted || '')}</td>
+      <td class="status-cell">
+        <select class="status-select status-${l.status || 'new'}" data-id="${esc(sid)}" onchange="onStatusChange(this); event.stopPropagation();" onclick="event.stopPropagation()">
+          <option value="new"         ${l.status === 'new' ? 'selected' : ''}>Новый</option>
+          <option value="in_progress" ${l.status === 'in_progress' ? 'selected' : ''}>В работе</option>
+          <option value="contacted"   ${l.status === 'contacted' ? 'selected' : ''}>Связались</option>
+          <option value="skip"        ${l.status === 'skip' ? 'selected' : ''}>Пропустить</option>
+        </select>
+      </td>
+    </tr>
+  `;
+}
+function onStatusChange(sel) {
+  const id = sel.dataset.id;
+  const status = sel.value;
+  sel.className = 'status-select status-' + status;
+  updateStatus(id, status);
+  const lead = allLeads.find(l => String(l.id) === String(id));
+  if (lead) lead.status = status;
+}
+function renderSources(l) {
+  let lprUrl = null;
+  if (l.statsnet_url) lprUrl = normUrl(l.statsnet_url);
+  else if (l.bin)     lprUrl = `https://ba.prg.kz/list/?text=${encodeURIComponent(l.bin)}`;
+  const meta = {
+    hh:  { label: 'HH',   url: l.hh_url  || null },
+    gis: { label: '2GIS', url: l.gis_url || null },
+    lpr: { label: 'ЛПР',  url: lprUrl },
+    kgd: { label: 'ЛПР',  url: lprUrl },
+  };
+  const sources = Array.isArray(l.sources) ? l.sources : [];
+  return sources.map(s => {
+    const m = meta[s] || { label: s, url: null };
+    const cls = s === 'kgd' ? 'lpr' : s;
+    return m.url
+      ? `<a href="${esc(m.url)}" target="_blank" onclick="event.stopPropagation()" class="source-badge ${cls}">${m.label} ↗</a>`
+      : `<span class="source-badge ${cls}">${m.label}</span>`;
+  }).join('');
+}
+
+/* =========================================================================
+   DETAILS DRAWER
+   ========================================================================= */
+function openDrawer(id) {
+  const lead = allLeads.find(l => String(l.id) === String(id));
+  if (!lead) return;
+  openLeadId = String(id);
+
+  document.getElementById('drawerTitle').textContent = lead.company || '—';
+
+  const body = document.getElementById('drawerBody');
+  const lprUrl = lead.statsnet_url ? normUrl(lead.statsnet_url)
+    : (lead.bin ? `https://ba.prg.kz/list/?text=${encodeURIComponent(lead.bin)}` : null);
+
+  body.innerHTML = `
+    <div class="drawer-section">
+      <h3>Вакансия</h3>
+      ${field('Название', lead.vacancy)}
+      ${field('Тип', POSITION_LABELS[lead.position_type] || lead.position_type)}
+      ${field('Город', lead.city)}
+      ${field('Дата публикации', lead.posted)}
+      ${lead.hh_url ? `<div class="drawer-field"><span class="label">HH</span><span class="value"><a href="${esc(lead.hh_url)}" target="_blank">Открыть на hh.kz ↗</a></span></div>` : ''}
+    </div>
+    <div class="drawer-section">
+      <h3>Компания</h3>
+      ${field('Название', lead.company)}
+      ${lead.rubric ? field('Рубрика', lead.rubric) : ''}
+      ${lead.bin ? `<div class="drawer-field"><span class="label">БИН</span><span class="value copyable mono" onclick="copyToClipboard('${esc(lead.bin)}')">${esc(lead.bin)}</span></div>` : ''}
+      ${lead.address ? field('Адрес', lead.address) : ''}
+      ${lead.gis_url ? `<div class="drawer-field"><span class="label">2GIS</span><span class="value"><a href="${esc(lead.gis_url)}" target="_blank">Карточка на 2GIS ↗</a></span></div>` : ''}
+      ${lprUrl ? `<div class="drawer-field"><span class="label">Реестр ЛПР</span><span class="value"><a href="${esc(lprUrl)}" target="_blank">Открыть на ba.prg.kz ↗</a></span></div>` : ''}
+    </div>
+    <div class="drawer-section">
+      <h3>Контакты</h3>
+      ${lead.phone   ? `<div class="drawer-field"><span class="label">Телефон</span><span class="value copyable mono" onclick="copyToClipboard('${esc(lead.phone)}')">${esc(lead.phone)}</span></div>` : ''}
+      ${lead.phone_extra ? `<div class="drawer-field"><span class="label">Доп. телефоны</span><span class="value copyable mono" onclick="copyToClipboard('${esc(lead.phone_extra)}')">${esc(lead.phone_extra)}</span></div>` : ''}
+      ${lead.email   ? `<div class="drawer-field"><span class="label">Email</span><span class="value copyable" onclick="copyToClipboard('${esc(lead.email)}')">${esc(lead.email)}</span></div>` : ''}
+      ${lead.website ? `<div class="drawer-field"><span class="label">Сайт</span><span class="value"><a href="${esc(normUrl(lead.website))}" target="_blank">${esc(lead.website)} ↗</a></span></div>` : ''}
+      ${(!lead.phone && !lead.email && !lead.website) ? '<div class="drawer-field"><span class="value empty">Контакты не найдены. Запусти обогащение через 2GIS.</span></div>' : ''}
+    </div>
+    <div class="drawer-section">
+      <h3>ЛПР</h3>
+      ${lead.director ? field('ФИО', lead.director) : '<div class="drawer-field"><span class="value empty">Не найден. Запусти поиск ЛПР.</span></div>'}
+      ${lead.director_position ? field('Должность', lead.director_position) : ''}
+    </div>
+  `;
+
+  // Status quick-change buttons
+  const actions = document.getElementById('drawerActions');
+  actions.innerHTML = `
+    <button onclick="quickStatus('${esc(lead.id)}','in_progress')" ${lead.status === 'in_progress' ? 'disabled' : ''}>В работу</button>
+    <button onclick="quickStatus('${esc(lead.id)}','contacted')" ${lead.status === 'contacted' ? 'disabled' : ''}>Связались</button>
+    <button onclick="quickStatus('${esc(lead.id)}','skip')" ${lead.status === 'skip' ? 'disabled' : ''}>Пропустить</button>
+  `;
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+
+  // подсветка открытой строки
+  document.querySelectorAll('#leadsBody tr').forEach(tr => tr.classList.remove('opened'));
+  const row = document.querySelector(`#leadsBody tr[data-id="${CSS.escape(String(id))}"]`);
+  if (row) row.classList.add('opened');
+}
+function closeDrawer() {
+  openLeadId = null;
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.querySelectorAll('#leadsBody tr').forEach(tr => tr.classList.remove('opened'));
+}
+function field(label, value) {
+  if (!value) return '';
+  return `<div class="drawer-field"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`;
+}
+async function quickStatus(id, status) {
+  const lead = allLeads.find(l => String(l.id) === String(id));
+  if (lead) lead.status = status;
+  await updateStatus(id, status);
+  toast(`Статус: ${STATUS_LABELS[status]}`, 'success');
+  render();
+  openDrawer(id); // refresh drawer actions state
+  fetchStats();
+}
+
+/* =========================================================================
+   FILTER DROPDOWNS
+   ========================================================================= */
+function updateCityFilter() {
+  const select = document.getElementById('filterCity');
+  const current = select.value;
+  const cities = [...new Set(allLeads.map(l => l.city).filter(c => c && c !== '—'))].sort();
+  select.innerHTML = '<option value="">Все города</option>' +
+    cities.map(c => `<option value="${esc(c)}" ${c === current ? 'selected' : ''}>${esc(c)}</option>`).join('');
+}
+function updateRubricFilter() {
+  const select = document.getElementById('filterRubric');
+  const current = select.value;
+  const rubrics = [...new Set(allLeads.map(l => l.rubric).filter(Boolean))].sort();
+  if (rubrics.length === 0) {
+    select.innerHTML = '<option value="">Рубрики (нет данных)</option>';
+    select.disabled = true;
+    return;
+  }
+  select.disabled = false;
+  select.innerHTML = '<option value="">Все рубрики</option>' +
+    rubrics.map(r => `<option value="${esc(r)}" ${r === current ? 'selected' : ''}>${esc(r)}</option>`).join('');
+}
+function updatePositionFilter() {
+  const select = document.getElementById('filterPosition');
+  const current = select.value;
+  const counts = { rop: 0, hr: 0, other: 0 };
+  for (const l of allLeads) {
+    const k = l.position_type || 'other';
+    if (k in counts) counts[k]++;
+  }
+  const options = [
+    { v: '',      label: `Все позиции (${allLeads.length})` },
+    { v: 'rop',   label: `${POSITION_LABELS.rop} (${counts.rop})` },
+    { v: 'hr',    label: `${POSITION_LABELS.hr} (${counts.hr})` },
+    { v: 'other', label: `${POSITION_LABELS.other} (${counts.other})` },
+  ];
+  select.innerHTML = options.map(o => `<option value="${o.v}" ${o.v === current ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
+}
+function updateStats() {
+  if (serverStats) {
+    document.getElementById('statToday').textContent        = serverStats.today        ?? 0;
+    document.getElementById('statWeek').textContent         = serverStats.week         ?? 0;
+    document.getElementById('statInProgress').textContent   = serverStats.in_progress  ?? 0;
+    document.getElementById('statTotal').textContent        = serverStats.total        ?? 0;
+    document.getElementById('statWithPhone').textContent    = serverStats.with_phone    ?? 0;
+    document.getElementById('statWithDirector').textContent = serverStats.with_director ?? 0;
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0, 10);
+  document.getElementById('statToday').textContent        = allLeads.filter(l => l.posted === today).length;
+  document.getElementById('statWeek').textContent         = allLeads.filter(l => l.posted >= weekAgo).length;
+  document.getElementById('statInProgress').textContent   = allLeads.filter(l => l.status === 'in_progress').length;
+  document.getElementById('statTotal').textContent        = allLeads.length;
+  document.getElementById('statWithPhone').textContent    = allLeads.filter(l => l.phone).length;
+  document.getElementById('statWithDirector').textContent = allLeads.filter(l => l.director).length;
+}
+function updateSortIndicators() {
+  document.querySelectorAll('th.sortable').forEach(th => {
+    const arrow = th.querySelector('.sort-arrow');
+    if (th.dataset.sort === sortState.column) {
+      th.classList.add('active');
+      arrow.textContent = sortState.direction === 'asc' ? '↑' : '↓';
+    } else {
+      th.classList.remove('active');
+      arrow.textContent = '↕';
+    }
+  });
+}
+function setLastUpdate() {
+  const t = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('lastUpdate').textContent = 'обновлено ' + t;
+}
+function resetFilters() {
+  filters = { search:'', position:'', city:'', rubric:'', status:'', has:'' };
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterPosition').value = '';
+  document.getElementById('filterCity').value = '';
+  document.getElementById('filterRubric').value = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterHasPhone').value = '';
+  render();
+}
+
+/* =========================================================================
+   EVENT LISTENERS
+   ========================================================================= */
+document.getElementById('searchInput').addEventListener('input', debounce(e => {
+  filters.search = e.target.value; render();
+}, 200));
+document.getElementById('filterPosition').addEventListener('change', e => { filters.position = e.target.value; render(); });
+document.getElementById('filterCity').addEventListener('change', e => { filters.city = e.target.value; render(); });
+document.getElementById('filterRubric').addEventListener('change', e => { filters.rubric = e.target.value; render(); });
+document.getElementById('filterStatus').addEventListener('change', e => { filters.status = e.target.value; render(); });
+document.getElementById('filterHasPhone').addEventListener('change', e => { filters.has = e.target.value; render(); });
+
+document.querySelectorAll('th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (sortState.column === col) {
+      sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortState.column = col;
+      sortState.direction = col === 'posted' ? 'desc' : 'asc';
+    }
+    render();
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+    document.getElementById('searchInput').select();
+  }
+  if (e.key === 'Escape') {
+    if (document.getElementById('settingsModal').classList.contains('open')) closeModal();
+    else if (document.getElementById('drawer').classList.contains('open')) closeDrawer();
+    else if (selectedIds.size > 0) clearSelection();
+  }
+});
+
+/* =========================================================================
+   CSV EXPORT
+   ========================================================================= */
+document.getElementById('exportBtn').addEventListener('click', exportCsv);
+function exportCsv() {
+  const filtered = applySort(applyFilters(allLeads));
+  if (filtered.length === 0) { toast('Нечего экспортировать — список пуст', true); return; }
+  const headers = ['Компания', 'Вакансия', 'Город', 'Позиция', 'Рубрика', 'Телефон', 'Email', 'Сайт', 'Адрес', 'ЛПР', 'Должность ЛПР', 'БИН', 'Статус', 'Дата', 'HH', '2GIS'];
+  const fields  = ['company', 'vacancy', 'city', 'position_type', 'rubric', 'phone', 'email', 'website', 'address', 'director', 'director_position', 'bin', 'status', 'posted', 'hh_url', 'gis_url'];
+  const escapeCsv = v => {
+    if (v == null) return '';
+    const s = String(v);
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = filtered.map(l => fields.map(f => escapeCsv(l[f])).join(';'));
+  const csv = '\uFEFF' + headers.join(';') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url; a.download = `lpr-leads-${date}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toast(`Экспортировано ${filtered.length} строк`, 'success');
+}
+
+/* =========================================================================
+   MOCK DATA
+   ========================================================================= */
+function getMockData() {
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  return [
+    { id: 1, company: 'TechCorp Almaty', vacancy: 'Руководитель отдела продаж',
+      position_type: 'rop', city: 'Алматы', rubric: 'IT-компании',
+      phone: '+7 727 123 4567', email: 'hr@techcorp.kz', website: 'techcorp.kz',
+      address: 'Алматы, пр. Достык 100, БЦ Forte', director: 'Бекенов Н. А.',
+      director_position: 'Генеральный директор', bin: '110940013175',
+      sources: ['hh', 'gis', 'lpr'],
+      hh_url: 'https://hh.kz/vacancy/1', gis_url: 'https://2gis.kz/almaty/1',
+      posted: today, status: 'new' },
+    { id: 2, company: 'Astana Logistics Group', vacancy: 'HR-директор',
+      position_type: 'hr', city: 'Астана', rubric: 'Логистика и грузоперевозки',
+      phone: '+7 717 234 5678', email: 'info@astana-log.kz', website: 'astana-log.kz',
+      address: 'Астана, ул. Кенесары 42', director: 'Сергеев И. В.',
+      director_position: 'Учредитель', bin: '180840022582',
+      sources: ['hh', 'gis'],
+      hh_url: 'https://hh.kz/vacancy/2', gis_url: 'https://2gis.kz/astana/2',
+      posted: today, status: 'new' },
+    { id: 3, company: 'Caspian Trade KZ', vacancy: 'Head of Sales',
+      position_type: 'rop', city: 'Шымкент', rubric: 'Оптовая торговля',
+      phone: null, email: 'office@caspian-trade.kz', website: 'caspian-trade.kz',
+      address: null, director: 'Жумабаев А. К.', director_position: 'Директор',
+      bin: null, sources: ['hh', 'lpr'],
+      hh_url: 'https://hh.kz/vacancy/3', gis_url: null,
+      posted: yesterday, status: 'in_progress' },
+    { id: 4, company: 'SmartRetail', vacancy: 'Рекрутер',
+      position_type: 'hr', city: 'Алматы', rubric: null,
+      phone: '+7 700 555 1234', email: null, website: 'smartretail.kz',
+      address: null, director: null, director_position: null, bin: null,
+      sources: ['hh'], hh_url: 'https://hh.kz/vacancy/4', gis_url: null,
+      posted: yesterday, status: 'new' },
+  ];
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+updatePositionFilter();
+fetchLeads();
+</script>
+</body>
+</html>
