@@ -205,6 +205,65 @@
   tr.selected:hover { background: rgba(212, 255, 58, 0.08); }
   tr.opened { background: rgba(125, 211, 252, 0.05); }
 
+  /* ----- Hot lead highlighting ----- */
+  /* Горячий лид = есть телефон/email И есть директор. Тонкая оранжевая полоса слева. */
+  tr.hot {
+    box-shadow: inset 3px 0 0 var(--amber);
+  }
+
+  /* Цвет фона по статусу — приоритет ниже чем .selected/.opened */
+  tr[data-status="contacted"]:not(.selected):not(.opened) {
+    background: rgba(134, 239, 172, 0.04);
+  }
+  tr[data-status="contacted"]:not(.selected):not(.opened):hover {
+    background: rgba(134, 239, 172, 0.08);
+  }
+  tr[data-status="skip"]:not(.selected):not(.opened) {
+    opacity: 0.5;
+  }
+  tr[data-status="skip"]:not(.selected):not(.opened):hover {
+    opacity: 0.75;
+  }
+
+  /* Note indicator (💬) в строке */
+  .note-indicator {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 11px;
+    color: var(--amber);
+    cursor: help;
+  }
+
+  /* Notes textarea в drawer */
+  .notes-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  .notes-textarea:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+  .notes-status {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    min-height: 14px;
+    transition: color 0.15s;
+  }
+  .notes-status.saving { color: var(--amber); }
+  .notes-status.saved  { color: var(--green); }
+  .notes-status.error  { color: var(--red); }
+
   /* Table */
   .table-wrap {
     background: var(--surface); border: 1px solid var(--border);
@@ -555,7 +614,7 @@
     </button>
     <button class="primary" id="enrichBtn" onclick="enrichSelected()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="enrichIcon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M21 3v6h-6"/></svg>
-      <span id="enrichText">Обогатить через 2GIS</span>
+      <span id="enrichText">2GIS</span>
     </button>
   </div>
 
@@ -624,6 +683,10 @@
       <label>POST — найти ЛПР</label>
       <input type="text" id="wh_lpr_input" placeholder="https://...">
     </div>
+    <div class="field">
+      <label>POST — сохранить заметку</label>
+      <input type="text" id="wh_note_input" placeholder="https://...">
+    </div>
     <div class="actions">
       <button onclick="closeModal()">Отмена</button>
       <button class="primary" onclick="saveSettings()">Сохранить</button>
@@ -644,6 +707,7 @@ const DEFAULT_CONFIG = {
   wh_stats:   'https://amiraskar2308.app.n8n.cloud/webhook/stats',
   wh_enrich:  'https://amiraskar2308.app.n8n.cloud/webhook/enrich-2gis',
   wh_lpr:     'https://amiraskar2308.app.n8n.cloud/webhook/find-lpr',
+  wh_note:    'https://amiraskar2308.app.n8n.cloud/webhook/lead-note',
 };
 
 const SORT_OPTIONS = {
@@ -708,6 +772,38 @@ async function copyToClipboard(text) {
   }
 }
 
+/* Если в БД position_type не выставлен (или 'other'), пытаемся определить
+   по названию вакансии. Делает фильтр устойчивым даже если парсер не выставил
+   тип позиции.
+   ВАЖНО: \b в JS regex НЕ работает с кириллицей (только латиница/цифры),
+   поэтому для русских слов используем матчинг без word boundary. */
+function detectPosition(vacancy) {
+  if (!vacancy) return 'other';
+  const n = String(vacancy).toLowerCase();
+
+  // РОП — sales leadership. Матчим без \b для кириллицы.
+  if (/(руководитель.*продаж|начальник.*продаж|роп|head\s+of\s+sales|sales\s+(director|head|lead)|коммерческий\s+директор|директор\s+по\s+продажам|director\s+of\s+sales)/i.test(n)) {
+    return 'rop';
+  }
+
+  // HR / рекрутинг — учитываем склонения для русских слов
+  if (/(hr|hrbp|рекрут|recruiter|recruiting|кадров|подбор[а-яё]*\s+(персонал|кадр|сотрудник)|talent\s+(acquisition|manager|lead)|people\s+manager|head\s+of\s+people)/i.test(n)) {
+    return 'hr';
+  }
+
+  return 'other';
+}
+
+function normalizeLead(l) {
+  // Доверяем БД только если там явно 'rop' или 'hr'.
+  // Во всех остальных случаях — определяем из vacancy_title.
+  const stored = (l.position_type || '').toString().toLowerCase().trim();
+  if (stored === 'rop' || stored === 'hr') {
+    return { ...l, position_type: stored };
+  }
+  return { ...l, position_type: detectPosition(l.vacancy) };
+}
+
 let toastTimer = null;
 function toast(msg, variant) {
   const el = document.getElementById('toast');
@@ -731,6 +827,7 @@ function openSettings() {
   document.getElementById('wh_stats').value     = config.wh_stats   || '';
   document.getElementById('wh_enrich').value    = config.wh_enrich  || '';
   document.getElementById('wh_lpr_input').value = config.wh_lpr     || '';
+  document.getElementById('wh_note_input').value = config.wh_note   || '';
   document.getElementById('settingsModal').classList.add('open');
 }
 function closeModal() { document.getElementById('settingsModal').classList.remove('open'); }
@@ -741,6 +838,7 @@ function saveSettings() {
   config.wh_stats   = document.getElementById('wh_stats').value.trim();
   config.wh_enrich  = document.getElementById('wh_enrich').value.trim();
   config.wh_lpr     = document.getElementById('wh_lpr_input').value.trim();
+  config.wh_note    = document.getElementById('wh_note_input').value.trim();
   saveConfig();
   closeModal();
   toast('Настройки сохранены', 'success');
@@ -753,20 +851,28 @@ document.getElementById('settingsModal').addEventListener('click', e => {
 /* =========================================================================
    API
    ========================================================================= */
-async function fetchLeads() {
-  if (!config.wh_leads) { allLeads = getMockData(); render(); return; }
-  showLoadingSkeleton();
+async function fetchLeads(opts = {}) {
+  const { showSkeleton = true, preserveScroll = false } = opts;
+  const scrollY = preserveScroll ? window.scrollY : 0;
+
+  if (!config.wh_leads) { allLeads = getMockData().map(normalizeLead); render(); return; }
+  if (showSkeleton) showLoadingSkeleton();
   try {
     const res = await fetch(config.wh_leads);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    allLeads = Array.isArray(data) ? data : (data.leads || []);
+    const raw = Array.isArray(data) ? data : (data.leads || []);
+    allLeads = raw.map(normalizeLead);
     setLastUpdate();
     render();
+    if (preserveScroll) {
+      // ждём что DOM применит изменения, потом восстанавливаем позицию
+      requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: 'instant' }));
+    }
     fetchStats();
   } catch (e) {
     toast('Ошибка загрузки: ' + e.message, true);
-    allLeads = getMockData();
+    allLeads = getMockData().map(normalizeLead);
     render();
   }
 }
@@ -915,7 +1021,7 @@ async function callEnrichment(url, btnId, textId, iconId, labelInProgress) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     toast(`Готово! Обогащено: ${count} компаний`, 'success');
     clearSelection();
-    fetchLeads();
+    fetchLeads({ showSkeleton: false, preserveScroll: true });
   } catch (e) {
     toast('Ошибка: ' + e.message, true);
   } finally {
@@ -993,11 +1099,22 @@ function rowHtml(l) {
   const isOpen = openLeadId === sid;
   const posBadge = l.position_type && l.position_type !== 'other'
     ? `<span class="position-badge ${esc(l.position_type)}">${esc(l.position_type)}</span>` : '';
+
+  // Hot lead: есть контакт (phone OR email) и есть директор
+  const isHot = !!((l.phone || l.email) && l.director);
+  const hasNote = !!(l.notes && l.notes.trim());
+
+  const classes = [
+    isSelected ? 'selected' : '',
+    isOpen     ? 'opened'   : '',
+    isHot      ? 'hot'      : '',
+  ].filter(Boolean).join(' ');
+
   return `
-    <tr class="${isSelected ? 'selected' : ''}${isOpen ? ' opened' : ''}" data-id="${esc(sid)}">
+    <tr class="${classes}" data-id="${esc(sid)}" data-status="${esc(l.status || 'new')}">
       <td class="check-cell"><input type="checkbox" class="row-check" data-id="${esc(sid)}" ${isSelected ? 'checked' : ''} onchange="toggleSelection('${esc(sid)}', this.checked); event.stopPropagation();" onclick="event.stopPropagation()"></td>
       <td class="company-cell" onclick="openDrawer('${esc(sid)}')">
-        <div class="company-name">${esc(l.company)}${posBadge}</div>
+        <div class="company-name">${esc(l.company)}${posBadge}${hasNote ? '<span class="note-indicator" title="Есть заметка">💬</span>' : ''}</div>
         <div class="vacancy-name">${esc(l.vacancy || '')}</div>
         ${l.rubric ? `<div class="company-rubric">${esc(l.rubric)}</div>` : ''}
       </td>
@@ -1072,6 +1189,11 @@ function openDrawer(id) {
 
   body.innerHTML = `
     <div class="drawer-section">
+      <h3>Заметки</h3>
+      <textarea class="notes-textarea" id="leadNotes" placeholder="Записать комментарий: когда звонил, что сказали, когда перезвонить..."></textarea>
+      <div class="notes-status" id="notesStatus"></div>
+    </div>
+    <div class="drawer-section">
       <h3>Вакансия</h3>
       ${field('Название', lead.vacancy)}
       ${field('Тип', POSITION_LABELS[lead.position_type] || lead.position_type)}
@@ -1103,6 +1225,9 @@ function openDrawer(id) {
     </div>
   `;
 
+  // Инициализируем textarea для заметок и подключаем autosave
+  setupNotesEditor(lead);
+
   // Status quick-change buttons
   const actions = document.getElementById('drawerActions');
   actions.innerHTML = `
@@ -1118,6 +1243,93 @@ function openDrawer(id) {
   document.querySelectorAll('#leadsBody tr').forEach(tr => tr.classList.remove('opened'));
   const row = document.querySelector(`#leadsBody tr[data-id="${CSS.escape(String(id))}"]`);
   if (row) row.classList.add('opened');
+}
+
+/* =========================================================================
+   NOTES — autosave + индикатор в строке
+   ========================================================================= */
+let notesSaveTimer = null;
+
+function setupNotesEditor(lead) {
+  const ta = document.getElementById('leadNotes');
+  const status = document.getElementById('notesStatus');
+  if (!ta) return;
+
+  ta.value = lead.notes || '';
+  status.textContent = '';
+  status.className = 'notes-status';
+
+  // Удалим старые обработчики через клонирование (важно когда drawer
+  // открывается несколько раз подряд для разных лидов)
+  const fresh = ta.cloneNode(true);
+  ta.parentNode.replaceChild(fresh, ta);
+
+  fresh.addEventListener('input', () => {
+    clearTimeout(notesSaveTimer);
+    status.textContent = 'Не сохранено...';
+    status.className = 'notes-status';
+    notesSaveTimer = setTimeout(() => {
+      saveNotes(String(lead.id), fresh.value);
+    }, 1200);
+  });
+
+  // Сохранить сразу при потере фокуса (если есть несохранённые изменения)
+  fresh.addEventListener('blur', () => {
+    if (notesSaveTimer) {
+      clearTimeout(notesSaveTimer);
+      saveNotes(String(lead.id), fresh.value);
+    }
+  });
+}
+
+async function saveNotes(id, notes) {
+  if (!config.wh_note) {
+    const status = document.getElementById('notesStatus');
+    if (status) { status.textContent = 'Webhook не настроен ⚙'; status.className = 'notes-status error'; }
+    return;
+  }
+  const status = document.getElementById('notesStatus');
+  if (status) { status.textContent = 'Сохраняю...'; status.className = 'notes-status saving'; }
+
+  try {
+    const res = await fetch(config.wh_note, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, notes })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    // Обновляем локальные данные
+    const lead = allLeads.find(l => String(l.id) === id);
+    if (lead) lead.notes = notes;
+
+    if (status) {
+      status.textContent = '✓ Сохранено';
+      status.className = 'notes-status saved';
+      setTimeout(() => {
+        if (status.textContent === '✓ Сохранено') status.textContent = '';
+      }, 2000);
+    }
+
+    // Обновим индикатор 💬 в строке без полного перерендера
+    updateNoteIndicator(id, notes);
+  } catch (e) {
+    if (status) { status.textContent = 'Ошибка: ' + e.message; status.className = 'notes-status error'; }
+  }
+}
+
+function updateNoteIndicator(id, notes) {
+  const row = document.querySelector(`#leadsBody tr[data-id="${CSS.escape(id)}"]`);
+  if (!row) return;
+  const nameDiv = row.querySelector('.company-name');
+  if (!nameDiv) return;
+  const existing = nameDiv.querySelector('.note-indicator');
+  const has = notes && notes.trim();
+  if (has && !existing) {
+    nameDiv.insertAdjacentHTML('beforeend', '<span class="note-indicator" title="Есть заметка">💬</span>');
+  } else if (!has && existing) {
+    existing.remove();
+  }
 }
 function closeDrawer() {
   openLeadId = null;
