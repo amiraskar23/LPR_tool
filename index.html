@@ -8,517 +8,679 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     Design tokens — тёплая светлая палитра, приятная глазу
+  ───────────────────────────────────────────────────────────────────────── */
   :root {
-    --bg: #0d0c0a;
-    --surface: #16140f;
-    --surface-2: #1d1a14;
-    --border: #2a261f;
-    --border-bright: #3d382d;
-    --text: #f5efe0;
-    --text-muted: #8a8275;
-    --text-dim: #5a564d;
-    --accent: #d4ff3a;
-    --accent-dim: #9ac421;
-    --blue: #7dd3fc;
-    --amber: #fbbf24;
-    --green: #86efac;
-    --red: #fca5a5;
+    /* фон */
+    --bg:           #f5f4f2;       /* тёплый офф-вайт, не слепит */
+    --surface:      #ffffff;
+    --surface-2:    #f0efed;       /* чуть темнее фона */
+    --surface-3:    #e8e6e2;
+
+    /* бордеры */
+    --border:       #e4e2de;
+    --border-mid:   #d4d1cc;
+
+    /* текст */
+    --text:         #1c1a17;       /* тёплый почти-чёрный */
+    --text-mid:     #57524a;       /* тёплый серый */
+    --text-muted:   #a09a92;       /* мутный для лейблов */
+
+    /* акцент — приглушённый сиреневато-синий, не режет */
+    --accent:       #6366f1;       /* indigo-500, мягче чистого синего */
+    --accent-light: #f0f0ff;
+    --accent-hover: #4f51d8;
+
+    /* статусные цвета */
+    --green:        #15803d;
+    --green-light:  #f0fdf4;
+    --green-border: #bbf7d0;
+    --amber:        #b45309;
+    --amber-light:  #fffbeb;
+    --amber-border: #fde68a;
+    --red:          #b91c1c;
+    --red-light:    #fef2f2;
+    --red-border:   #fecaca;
+    --blue:         #0369a1;
+    --blue-light:   #f0f9ff;
+    --blue-border:  #bae6fd;
+    --purple:       #6d28d9;
+    --purple-light: #f5f3ff;
+    --purple-border:#ddd6fe;
+    --orange:       #c2410c;
+    --orange-light: #fff7ed;
+    --orange-border:#fed7aa;
+
+    /* тени — очень мягкие */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+    --shadow-lg: 0 16px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+
+    --radius:    12px;
+    --radius-sm: 8px;
+    --radius-xs: 5px;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     background: var(--bg); color: var(--text);
     font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 14px; line-height: 1.5; min-height: 100vh;
+    font-size: 14px; line-height: 1.55; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-  body {
-    background-image:
-      radial-gradient(ellipse at top left, rgba(212, 255, 58, 0.04) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(125, 211, 252, 0.03) 0%, transparent 50%);
-  }
-  .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.92em; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.88em; }
 
-  /* Header */
+  /* ─── Header ───────────────────────────────────────────────────────────── */
   header {
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 18px 28px;
+    padding: 13px 28px;
     display: flex; align-items: center; justify-content: space-between;
-    background: var(--bg);
-    position: sticky; top: 0; z-index: 10;
-    backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 20;
+    box-shadow: var(--shadow-sm);
   }
-  .brand { display: flex; align-items: baseline; gap: 14px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
   .brand h1 {
     font-family: 'Unbounded', sans-serif;
-    font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+    font-size: 17px; font-weight: 700; letter-spacing: -0.03em; color: var(--text);
   }
   .brand .dot { color: var(--accent); }
   .brand .subtitle {
-    color: var(--text-dim); font-size: 11px;
+    color: var(--text-muted); font-size: 10.5px; font-weight: 500;
     letter-spacing: 0.05em; text-transform: uppercase;
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 999px;
   }
-  .header-actions { display: flex; align-items: center; gap: 12px; }
+  .header-actions { display: flex; align-items: center; gap: 6px; }
   .last-update {
     font-size: 12px; color: var(--text-muted);
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 5px; margin-right: 6px;
   }
   .pulse {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 8px var(--accent);
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 0 3px var(--green-light);
   }
 
-  /* Buttons */
+  /* ─── Buttons ──────────────────────────────────────────────────────────── */
   button, .btn {
     background: var(--surface); color: var(--text);
-    border: 1px solid var(--border-bright);
-    padding: 8px 14px; border-radius: 6px;
-    font-family: inherit; font-size: 13px; cursor: pointer;
-    transition: all 0.15s ease;
+    border: 1px solid var(--border-mid);
+    padding: 7px 15px; border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background 0.14s, border-color 0.14s, box-shadow 0.14s;
     display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: var(--shadow-xs);
+    white-space: nowrap;
   }
-  button:hover, .btn:hover { background: var(--surface-2); border-color: var(--accent-dim); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button:hover { background: var(--surface-2); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
   button.primary {
-    background: var(--accent); color: #0a0a0a;
+    background: var(--accent); color: #fff;
     border-color: var(--accent); font-weight: 600;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.28);
   }
-  button.primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
-  button.primary:disabled { background: var(--accent-dim); }
+  button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  button.primary:disabled { background: #a5b4fc; border-color: #a5b4fc; box-shadow: none; }
+
   button.blue {
-    background: var(--blue); color: #0a0a0a;
-    border-color: var(--blue); font-weight: 600;
+    background: var(--blue); color: #fff; border-color: var(--blue);
+    font-weight: 600; box-shadow: 0 2px 8px rgba(3,105,161,0.2);
   }
-  button.blue:hover { background: #38bdf8; border-color: #38bdf8; }
+  button.blue:hover { background: #075985; border-color: #075985; }
+
   button.icon-only {
-    padding: 8px; width: 34px; height: 34px; justify-content: center;
+    padding: 0; width: 34px; height: 34px;
+    justify-content: center; color: var(--text-mid);
+    border-radius: var(--radius-sm);
   }
+  button.icon-only:hover { background: var(--surface-2); color: var(--text); }
+
   button.ghost {
     background: transparent; border-color: transparent;
-    color: var(--text-muted); padding: 6px 10px;
+    color: var(--text-mid); box-shadow: none;
   }
-  button.ghost:hover { color: var(--text); background: var(--surface-2); }
+  button.ghost:hover { background: var(--surface-2); color: var(--text); }
 
-  /* Main */
-  main { padding: 24px 28px; max-width: 1600px; margin: 0 auto; }
+  /* ─── Layout ───────────────────────────────────────────────────────────── */
+  main { padding: 18px 28px 32px; max-width: 1640px; margin: 0 auto; }
 
-  /* Stats */
+  /* ─── Stat cards ───────────────────────────────────────────────────────── */
   .stats {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
-    margin-bottom: 18px;
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 10px; margin-bottom: 16px;
   }
   .stat-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 14px 16px;
+    border-radius: var(--radius); padding: 14px 18px;
+    box-shadow: var(--shadow-xs);
+    transition: box-shadow 0.15s;
   }
-  .stat-card.highlight { border-color: var(--accent-dim); }
+  .stat-card:hover { box-shadow: var(--shadow-sm); }
+  .stat-card.highlight {
+    background: var(--accent-light); border-color: rgba(99,102,241,0.25);
+  }
   .stat-label {
-    font-size: 11px; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+    font-size: 10.5px; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px;
   }
   .stat-value {
     font-family: 'Unbounded', sans-serif;
-    font-size: 26px; font-weight: 600;
+    font-size: 24px; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: -0.02em;
   }
   .stat-card.highlight .stat-value { color: var(--accent); }
 
-  /* Filters */
-  .filters {
-    display: flex; gap: 10px; margin-bottom: 14px;
-    flex-wrap: wrap; align-items: center;
+  /* ─── Filters ──────────────────────────────────────────────────────────── */
+
+  /* Ряд 1: поиск + dropdowns */
+  .filters-row1 {
+    display: flex; gap: 7px; align-items: center; margin-bottom: 8px;
   }
-  .search-wrap { flex: 1; min-width: 240px; position: relative; }
+  .search-wrap {
+    width: 280px; flex-shrink: 0; position: relative;
+  }
   .search-wrap svg {
-    position: absolute; left: 12px; top: 50%;
-    transform: translateY(-50%); color: var(--text-dim);
+    position: absolute; left: 11px; top: 50%;
+    transform: translateY(-50%); color: var(--text-muted); pointer-events: none;
   }
   .search-wrap input {
-    width: 100%; padding: 9px 14px 9px 36px;
-    background: var(--surface); border: 1px solid var(--border-bright);
-    border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px;
+    width: 100%; height: 36px; padding: 0 34px 0 34px;
+    background: var(--surface); border: 1px solid var(--border-mid);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: inherit; font-size: 13px; box-shadow: var(--shadow-xs);
+    transition: border-color 0.14s, box-shadow 0.14s;
   }
-  .search-wrap input:focus { outline: none; border-color: var(--accent-dim); }
+  .search-wrap input:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
   .search-wrap .kbd {
-    position: absolute; right: 10px; top: 50%;
-    transform: translateY(-50%);
-    background: var(--surface-2); color: var(--text-dim);
-    border: 1px solid var(--border); border-radius: 4px;
-    padding: 2px 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace;
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 5px; font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .filters-dropdowns {
+    display: flex; gap: 7px; flex: 1; align-items: center; flex-wrap: wrap;
   }
   select {
-    padding: 9px 30px 9px 12px;
-    background: var(--surface); border: 1px solid var(--border-bright);
-    border-radius: 6px; color: var(--text); font-family: inherit;
-    font-size: 13px; cursor: pointer; appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8275' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 10px center;
+    height: 36px; padding: 0 28px 0 11px; min-width: 0;
+    background: var(--surface); border: 1px solid var(--border-mid);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23a09a92' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 9px center;
+    box-shadow: var(--shadow-xs); flex: 1;
+    transition: border-color 0.14s, box-shadow 0.14s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  select:focus { outline: none; border-color: var(--accent-dim); }
+  select:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  /* Фиксируем максимальную ширину чтобы не разъезжалось */
+  #filterPosition { max-width: 200px; }
+  #filterCity     { max-width: 180px; }
+  #filterRubric   { max-width: 200px; }
+  #filterStatus   { max-width: 160px; }
 
-  /* Selection bar */
+  /* Ряд 2: pills */
+  .filters-row2 {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .filters-sep {
+    width: 1px; height: 18px; background: var(--border-mid); flex-shrink: 0; margin: 0 2px;
+  }
+
+  /* Pills — унифицированный стиль для контактных и датных */
+  .cpill, .dpill {
+    height: 30px; padding: 0 12px;
+    border-radius: 999px; font-size: 12px; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--border-mid);
+    color: var(--text-mid); cursor: pointer; box-shadow: none;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  }
+  .cpill:hover, .dpill:hover {
+    background: var(--surface-2); color: var(--text); border-color: var(--border-mid);
+  }
+  .cpill.cpill-active {
+    background: var(--accent-light); border-color: var(--accent);
+    color: var(--accent); font-weight: 600;
+  }
+  .dpill.dpill-active {
+    background: var(--surface-3); border-color: var(--border-mid);
+    color: var(--text); font-weight: 600;
+  }
+
+  /* ─── Reset button ─────────────────────────────────────────────────────── */
+  .reset-filters-btn {
+    height: 30px; padding: 0 11px; margin-left: auto;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 999px; color: var(--text-muted);
+    font-family: inherit; font-size: 11.5px; font-weight: 500; cursor: pointer;
+    box-shadow: none; transition: all 0.13s; white-space: nowrap;
+  }
+  .reset-filters-btn:hover {
+    border-color: var(--red-border); color: var(--red); background: var(--red-light);
+  }
+
+  /* ─── Selection bar ────────────────────────────────────────────────────── */
   .selection-bar {
-    background: var(--surface);
-    border: 1px solid var(--accent-dim); border-radius: 8px;
-    padding: 10px 16px; margin-bottom: 12px;
+    background: var(--surface); border: 1.5px solid rgba(99,102,241,0.35);
+    border-radius: var(--radius); padding: 9px 16px; margin-bottom: 10px;
     display: none; align-items: center; gap: 10px;
-    animation: slideDown 0.18s ease;
-    position: sticky; top: 76px; z-index: 9;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    flex-wrap: wrap;
+    animation: slideDown 0.16s ease;
+    position: sticky; top: 63px; z-index: 9;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+
   }
   .selection-bar.visible { display: flex; }
-  .selection-bar .count { font-size: 13px; color: var(--text); }
-  .selection-bar .count strong {
-    color: var(--accent); font-weight: 600;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .selection-bar .spacer { flex: 1; min-width: 1px; }
-  .selection-bar .divider {
-    width: 1px; height: 22px; background: var(--border-bright); margin: 0 4px;
-  }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-4px); } }
+  .selection-bar .count { font-size: 13px; font-weight: 600; color: var(--accent); }
+  .selection-bar .divider { width: 1px; height: 20px; background: var(--border); }
+  .selection-bar .spacer { flex: 1; }
 
-  /* Row checkbox */
-  .row-check {
-    appearance: none; -webkit-appearance: none;
-    width: 16px; height: 16px;
-    border: 1.5px solid var(--border-bright); border-radius: 4px;
-    background: var(--bg); cursor: pointer;
-    position: relative; transition: all 0.12s ease;
-    flex-shrink: 0; vertical-align: middle;
-  }
-  .row-check:hover { border-color: var(--accent-dim); }
-  .row-check:checked { background: var(--accent); border-color: var(--accent); }
-  .row-check:checked::after {
-    content: ''; position: absolute; left: 4px; top: 0;
-    width: 5px; height: 10px;
-    border: solid #0a0a0a; border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-  td.check-cell, th.check-cell {
-    width: 36px; padding-right: 0; text-align: center;
-  }
-
-  tr.selected { background: rgba(212, 255, 58, 0.04); }
-  tr.selected:hover { background: rgba(212, 255, 58, 0.08); }
-  tr.opened { background: rgba(125, 211, 252, 0.05); }
-
-  /* ----- Hot lead highlighting ----- */
-  /* Горячий лид = есть телефон/email И есть директор. Тонкая оранжевая полоса слева. */
-  tr.hot {
-    box-shadow: inset 3px 0 0 var(--amber);
-  }
-
-  /* Цвет фона по статусу — приоритет ниже чем .selected/.opened */
-  tr[data-status="contacted"]:not(.selected):not(.opened) {
-    background: rgba(134, 239, 172, 0.04);
-  }
-  tr[data-status="contacted"]:not(.selected):not(.opened):hover {
-    background: rgba(134, 239, 172, 0.08);
-  }
-  tr[data-status="skip"]:not(.selected):not(.opened) {
-    opacity: 0.5;
-  }
-  tr[data-status="skip"]:not(.selected):not(.opened):hover {
-    opacity: 0.75;
-  }
-
-  /* Note indicator (💬) в строке */
-  .note-indicator {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 11px;
-    color: var(--amber);
-    cursor: help;
-  }
-
-  /* Notes textarea в drawer */
-  .notes-textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 10px 12px;
-    background: var(--bg);
-    border: 1px solid var(--border-bright);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    line-height: 1.5;
-    resize: vertical;
-    transition: border-color 0.15s;
-  }
-  .notes-textarea:focus {
-    outline: none;
-    border-color: var(--accent-dim);
-  }
-  .notes-status {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 6px;
-    min-height: 14px;
-    transition: color 0.15s;
-  }
-  .notes-status.saving { color: var(--amber); }
-  .notes-status.saved  { color: var(--green); }
-  .notes-status.error  { color: var(--red); }
-
-  /* Table */
+  /* ─── Table wrapper ────────────────────────────────────────────────────── */
   .table-wrap {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; overflow: hidden;
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow-xs);
   }
-  table { width: 100%; border-collapse: collapse; }
-  thead { background: var(--surface-2); }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  thead { background: var(--surface-2); position: sticky; top: 0; z-index: 5; }
   th {
-    text-align: left; padding: 12px 16px;
-    font-weight: 500; font-size: 11px;
-    color: var(--text-muted); text-transform: uppercase;
-    letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
-    user-select: none;
+    padding: 10px 16px; text-align: left;
+    font-size: 10.5px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap; user-select: none;
   }
-  th.sortable { cursor: pointer; transition: color 0.12s; }
-  th.sortable:hover { color: var(--text); }
-  th.sortable .sort-arrow {
-    display: inline-block; margin-left: 4px; opacity: 0.4; font-size: 10px;
-  }
-  th.sortable.active .sort-arrow { opacity: 1; color: var(--accent); }
+  th.sortable { cursor: pointer; }
+  th.sortable:hover { color: var(--text-mid); }
+  th.active { color: var(--accent); }
+  .sort-arrow { margin-left: 3px; opacity: 0.5; font-size: 10px; }
+
+  /* ─── Table rows — КЛЮЧЕВОЕ для checkbox'а ─────────────────────────────── */
   td {
-    padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    padding: 0;                    /* padding живёт внутри .cell */
   }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr { transition: background 0.1s; cursor: default; }
-  tbody tr:hover { background: var(--surface-2); }
-  tbody tr td:not(.check-cell):not(.status-cell) {
-    cursor: pointer;
+  td.check-cell { width: 44px; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { cursor: pointer; transition: background 0.12s; will-change: background-color; }
+  tbody tr:hover td { background: #faf9f7; }
+  tbody tr:hover .cell { color: var(--text); }
+  tbody tr.selected td { background: var(--accent-light); }
+  tbody tr.opened td { background: var(--accent-light); }
+
+  /* Универсальная обёртка — задаёт отступ и выравнивает содержимое */
+  .cell { padding: 12px 16px; }
+
+  input[type="checkbox"] {
+    width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;
+    flex-shrink: 0; display: block;
   }
 
-  .company-cell { min-width: 220px; }
-  .company-name { font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .vacancy-name { font-size: 12px; color: var(--text-muted); }
-  .company-rubric {
-    font-size: 11px; color: var(--accent-dim); margin-top: 4px;
-    display: flex; align-items: center; gap: 4px;
+  /* ─── Company cell ─────────────────────────────────────────────────────── */
+  .company-name {
+    font-weight: 700; font-size: 13.5px; color: var(--text);
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 1px; line-height: 1.3;
   }
-  .company-rubric::before { content: '🏷'; opacity: 0.5; font-size: 10px; }
+  .vacancy-title { font-size: 12px; color: var(--text-muted); line-height: 1.4; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; margin-top: 1px; }
+  .note-indicator { font-size: 12px; opacity: 0.7; }
 
-  .contact-cell { min-width: 200px; }
+  /* ─── Category badge ───────────────────────────────────────────────────── */
+  .category-badge {
+    display: inline-flex; align-items: center; padding: 2px 9px;
+    border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .category-badge.tier-1 { background: var(--green-light); color: var(--green); border-color: var(--green-border); }
+  .category-badge.tier-2 { background: var(--blue-light);  color: var(--blue);  border-color: var(--blue-border); }
+  .category-badge.tier-3 { background: var(--amber-light); color: var(--amber); border-color: var(--amber-border); }
+
+  /* ─── Contact cell ─────────────────────────────────────────────────────── */
   .contact-row {
-    display: flex; align-items: center; gap: 6px;
-    margin-bottom: 4px; font-size: 12.5px;
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12.5px; color: var(--text-mid); margin-bottom: 3px;
   }
   .contact-row:last-child { margin-bottom: 0; }
-  .contact-row .icon { color: var(--text-dim); font-size: 11px; width: 14px; }
-  .contact-row .copyable {
-    cursor: pointer; color: var(--text);
-    border-bottom: 1px dashed transparent; transition: all 0.12s;
-  }
-  .contact-row .copyable:hover {
-    color: var(--accent); border-bottom-color: var(--accent-dim);
-  }
-  .contact-row a { color: var(--blue); text-decoration: none; }
-  .contact-row a:hover { text-decoration: underline; }
-  .contact-address {
-    font-size: 11px; color: var(--text-dim); margin-top: 6px;
-    line-height: 1.4;
-  }
+  .contact-row .icon { color: var(--text-muted); font-size: 11px; width: 12px; flex-shrink: 0; }
+  .copyable { cursor: pointer; transition: color 0.12s; }
+  .copyable:hover { color: var(--accent); }
+  .wa-icon { color: #25d366; display: inline-flex; align-items: center; margin-left: 4px; opacity: 0.9; }
+  .wa-icon:hover { opacity: 1; }
 
-  .director-cell { min-width: 180px; }
-  .director-name { font-weight: 500; }
-  .director-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  /* ─── Director cell ────────────────────────────────────────────────────── */
+  .director-row { font-size: 12.5px; color: var(--text-mid); line-height: 1.4; cursor: pointer; }
+  .director-row:hover { color: var(--accent); }
+  .director-pos  { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
   .director-bin {
-    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
-    color: var(--text-dim); margin-top: 4px; cursor: pointer;
+    display: inline-block; margin-top: 4px;
+    font-size: 10.5px; font-family: 'JetBrains Mono', monospace;
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 2px 7px; border-radius: var(--radius-xs); cursor: pointer;
+    color: var(--text-muted); transition: all 0.12s;
   }
-  .director-bin:hover { color: var(--accent); }
+  .director-bin:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
-  /* Source badges */
-  .sources { display: flex; flex-wrap: wrap; gap: 4px; }
+  /* ─── Source badges ────────────────────────────────────────────────────── */
   .source-badge {
-    display: inline-block; padding: 2px 7px; border-radius: 3px;
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
-    background: var(--surface-2); border: 1px solid var(--border-bright);
-    color: var(--text-muted); text-decoration: none;
-    font-family: 'JetBrains Mono', monospace;
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    text-decoration: none; margin-right: 3px; margin-bottom: 2px;
+    border: 1px solid transparent; transition: opacity 0.12s;
   }
-  .source-badge.hh  { color: var(--blue);  border-color: rgba(125, 211, 252, 0.3); }
-  .source-badge.gis { color: var(--green); border-color: rgba(134, 239, 172, 0.3); }
-  .source-badge.kgd, .source-badge.lpr {
-    color: var(--amber); border-color: rgba(251, 191, 36, 0.3);
+  .source-badge:hover { opacity: 0.8; transform: translateY(-1px); }
+  .source-badge.hh  { background: var(--orange-light); color: var(--orange); border-color: var(--orange-border); }
+  .source-badge.gis { background: var(--green-light);  color: var(--green);  border-color: var(--green-border); }
+  .source-badge.lpr { background: var(--purple-light); color: var(--purple); border-color: var(--purple-border); }
+
+  /* ─── Status select ────────────────────────────────────────────────────── */
+  .status-select {
+    padding: 5px 24px 5px 10px; font-size: 12px; font-weight: 500;
+    border-radius: 999px; min-width: 108px; cursor: pointer;
+    box-shadow: none; height: auto; transition: opacity 0.12s;
   }
-  a.source-badge:hover { background: var(--bg); border-color: currentColor; }
+  .status-select:hover { opacity: 0.85; }
+  .status-new         { background: var(--surface-2); color: var(--text-mid); border-color: var(--border); }
+  .status-in_progress { background: var(--blue-light); color: var(--blue); border-color: var(--blue-border); }
+  .status-contacted   { background: var(--green-light); color: var(--green); border-color: var(--green-border); }
+  .status-skip        { background: var(--surface-3); color: var(--text-muted); border-color: var(--border-mid); }
 
-  /* Status */
-  .status-select { padding: 4px 22px 4px 8px; font-size: 12px; min-width: 110px; }
-  .status-new         { color: var(--blue); }
-  .status-in_progress { color: var(--amber); }
-  .status-contacted   { color: var(--green); }
-  .status-skip        { color: var(--text-dim); }
-
-  /* Position badge */
-  .position-badge {
-    display: inline-block; padding: 2px 6px; border-radius: 3px;
-    font-size: 10px; font-weight: 600; text-transform: uppercase; margin-left: 6px;
-  }
-  .position-badge.rop { background: rgba(212, 255, 58, 0.15); color: var(--accent); }
-  .position-badge.hr  { background: rgba(125, 211, 252, 0.15); color: var(--blue); }
-
-  /* Empty / Loading */
+  /* ─── Empty / loading ──────────────────────────────────────────────────── */
   .empty-state, .loading-state {
-    padding: 60px 20px; text-align: center; color: var(--text-muted);
+    padding: 56px 24px; text-align: center; color: var(--text-muted);
   }
-  .empty-state h3 {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 16px; margin-bottom: 8px; color: var(--text);
+  .empty-state::before {
+    content: "🔍"; font-size: 32px; display: block; margin-bottom: 14px; opacity: 0.5;
   }
-  .empty-state p { font-size: 13px; margin-bottom: 16px; }
-  .skeleton-row {
-    height: 56px;
-    background: linear-gradient(90deg,
-      var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s linear infinite;
-    border-bottom: 1px solid var(--border);
+  .empty-state h3 { font-size: 15px; margin-bottom: 8px; color: var(--text); font-weight: 600; }
+  .empty-state p  { font-size: 13px; }
+  .empty-state button { margin-top: 16px; }
+  .skeleton-row td > * { background: transparent; padding: 12px 16px; }
+  .skeleton-line {
+    height: 11px; border-radius: 4px;
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%; animation: shimmer 1.5s infinite;
   }
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
+  .skeleton-line.short { width: 55%; }
+  .skeleton-line.xshort { width: 32%; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
 
-  /* Modal */
+  /* ─── Modal ────────────────────────────────────────────────────────────── */
   .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-    display: none; align-items: center; justify-content: center; z-index: 100;
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(28,26,23,0.4); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
   }
   .modal-overlay.open { display: flex; }
   .modal {
-    background: var(--surface); border: 1px solid var(--border-bright);
-    border-radius: 10px; padding: 24px;
-    max-width: 520px; width: 100%; margin: 16px;
+    background: var(--surface); border-radius: 16px;
+    padding: 28px; width: 92vw; max-width: 480px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    animation: modalIn 0.22s cubic-bezier(0.34,1.4,0.64,1);
   }
+  @keyframes modalIn { from { opacity:0; transform:scale(0.95) translateY(6px); } }
   .modal h2 {
     font-family: 'Unbounded', sans-serif;
-    font-size: 16px; font-weight: 600; margin-bottom: 16px;
+    font-size: 15px; font-weight: 700; margin-bottom: 20px; color: var(--text);
   }
-  .modal .field { margin-bottom: 14px; }
+  .modal .field { margin-bottom: 13px; }
   .modal label {
-    display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;
+    display: block; font-size: 11.5px; font-weight: 600; color: var(--text-muted);
+    margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;
   }
   .modal input {
-    width: 100%; padding: 8px 12px;
-    background: var(--bg); border: 1px solid var(--border-bright);
-    border-radius: 5px; color: var(--text); font-family: inherit; font-size: 13px;
+    width: 100%; height: 36px; padding: 0 11px;
+    background: var(--surface); border: 1px solid var(--border-mid);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: inherit; font-size: 13px; transition: border-color 0.14s, box-shadow 0.14s;
   }
-  .modal input:focus { outline: none; border-color: var(--accent-dim); }
-  .modal .actions {
-    display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;
+  .modal input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+
+  /* ─── Parser modal ─────────────────────────────────────────────────────── */
+  .parser-modal { max-width: 520px !important; }
+  .parser-modal h2 { margin-bottom: 12px; }
+
+  /* Шапка с кнопками */
+  .parser-top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .parser-top-bar-btns { display: flex; gap: 6px; }
+  .parser-top-btn {
+    font-size: 11.5px; font-weight: 500; color: var(--text-mid);
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    cursor: pointer; box-shadow: none; transition: all 0.12s;
+  }
+  .parser-top-btn:hover { background: var(--surface-3); color: var(--text); }
+  .parser-counter-badge {
+    font-size: 11.5px; color: var(--text-muted);
+  }
+  .parser-counter-badge strong { color: var(--accent); font-weight: 700; }
+
+  /* Скроллируемый список */
+  .parser-scroll {
+    max-height: 420px; overflow-y: auto;
+    margin: 0 -4px; padding: 0 4px;
+  }
+  .parser-scroll::-webkit-scrollbar { width: 4px; }
+  .parser-scroll::-webkit-scrollbar-track { background: transparent; }
+  .parser-scroll::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
+
+  /* Группа тира */
+  .parser-tier-group { margin-bottom: 6px; }
+  .parser-tier-label {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 8px 5px;
+    font-size: 10.5px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    cursor: pointer; border-radius: var(--radius-xs);
+    transition: background 0.1s; user-select: none;
+  }
+  .parser-tier-label:hover { background: var(--surface-2); }
+  .parser-tier-label-toggle {
+    font-size: 10.5px; color: var(--accent); font-weight: 600;
+    text-transform: none; letter-spacing: 0;
   }
 
-  /* ----- DETAILS DRAWER (side panel) ----- */
+  /* Список запросов */
+  .parser-query-list {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 4px;
+  }
+  .parser-query-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s; user-select: none;
+  }
+  .parser-query-item:last-child { border-bottom: none; }
+  .parser-query-item:hover { background: var(--surface-2); }
+  .parser-query-item.pq-checked { background: var(--accent-light); }
+  .parser-query-item input[type="checkbox"] {
+    accent-color: var(--accent); width: 14px; height: 14px; flex-shrink: 0;
+    pointer-events: none;
+  }
+  .pq-label {
+    font-size: 13px; font-weight: 500; color: var(--text); flex: 1;
+    text-transform: none; letter-spacing: 0;
+  }
+  .pq-pages {
+    font-size: 11px; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace; white-space: nowrap;
+  }
+
+  /* Итог внизу */
+  .parser-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0 0; margin-top: 8px; border-top: 1px solid var(--border);
+    font-size: 12.5px; color: var(--text-mid);
+  }
+  .parser-footer strong { color: var(--accent); font-weight: 700; }
+
+  /* ─── Drawer ───────────────────────────────────────────────────────────── */
   .drawer-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(2px);
-    display: none; z-index: 90;
-    opacity: 0; transition: opacity 0.2s;
+    display: none; position: fixed; inset: 0; z-index: 50;
+    background: rgba(28,26,23,0.28); backdrop-filter: blur(4px);
   }
-  .drawer-overlay.open { display: block; opacity: 1; }
-
+  .drawer-overlay.open { display: block; }
   .drawer {
-    position: fixed; top: 0; right: 0;
-    width: 480px; max-width: 100vw; height: 100vh;
-    background: var(--surface);
-    border-left: 1px solid var(--border-bright);
-    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
-    z-index: 91;
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 51;
+    width: 460px; background: var(--bg);
+    border-left: 1px solid var(--border);
     transform: translateX(100%);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.26s cubic-bezier(0.25,0.46,0.45,0.94);
+    box-shadow: -16px 0 48px rgba(0,0,0,0.1);
     display: flex; flex-direction: column;
-    overflow: hidden;
   }
   .drawer.open { transform: translateX(0); }
+
+  /* Header */
   .drawer-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: flex-start;
-    gap: 12px;
+    padding: 18px 20px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    background: var(--surface); flex-shrink: 0;
   }
-  .drawer-title {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 16px; font-weight: 600;
-    line-height: 1.3; flex: 1;
+  .drawer-company {
+    font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.3;
+    margin-bottom: 3px;
+  }
+  .drawer-vacancy-sub {
+    font-size: 12.5px; color: var(--text-muted); line-height: 1.4;
   }
   .drawer-close {
-    background: transparent; border: none; color: var(--text-muted);
-    padding: 4px; cursor: pointer; flex-shrink: 0;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 999px; width: 28px; height: 28px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); cursor: pointer; box-shadow: none;
+    transition: all 0.13s; margin-top: 2px;
   }
-  .drawer-close:hover { color: var(--text); }
-  .drawer-body {
-    padding: 20px 24px; flex: 1; overflow-y: auto;
+  .drawer-close:hover { background: var(--surface-3); color: var(--text); }
+
+  /* Scroll area */
+  .drawer-scroll { flex: 1; overflow-y: auto; }
+  .drawer-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* Card-секция */
+  .d-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow-xs);
   }
-  .drawer-section { margin-bottom: 22px; }
-  .drawer-section h3 {
-    font-size: 11px; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 0.06em;
-    margin-bottom: 10px; font-weight: 500;
+  .d-card-title {
+    padding: 10px 14px 8px; font-size: 10px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border); background: var(--surface-2);
+    display: flex; align-items: center; gap: 6px;
   }
-  .drawer-field {
-    display: flex; flex-direction: column; gap: 2px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
+  .d-card-title svg { opacity: 0.6; }
+  .d-card-body { padding: 0; }
+
+  /* Строка поля внутри card */
+  .d-row {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 9px 14px; border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
   }
-  .drawer-field:last-child { border-bottom: none; }
-  .drawer-field .label {
-    font-size: 11px; color: var(--text-dim);
+  .d-row:last-child { border-bottom: none; }
+  .d-row:hover { background: var(--surface-2); }
+  .d-label {
+    font-size: 11.5px; font-weight: 600; color: var(--text-muted);
+    min-width: 90px; flex-shrink: 0; padding-top: 1px;
   }
-  .drawer-field .value {
-    font-size: 14px; color: var(--text);
+  .d-value {
+    font-size: 13px; color: var(--text); flex: 1; line-height: 1.45;
     word-break: break-word;
   }
-  .drawer-field .value.empty { color: var(--text-dim); font-style: italic; }
-  .drawer-field .value.copyable {
-    cursor: pointer; border-bottom: 1px dashed transparent;
+  .d-value a {
+    color: var(--accent); text-decoration: none; font-weight: 500;
   }
-  .drawer-field .value.copyable:hover {
-    color: var(--accent); border-bottom-color: var(--accent-dim);
+  .d-value a:hover { text-decoration: underline; }
+  .d-value.muted { color: var(--text-muted); font-style: italic; }
+  .d-value .mono { font-size: 12px; }
+
+  /* Заметки внутри card */
+  .d-notes-wrap { padding: 10px 14px; }
+  .drawer-note-area {
+    width: 100%; min-height: 84px; padding: 9px 11px;
+    background: var(--surface-2); border: 1px solid var(--border-mid);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: inherit; font-size: 13px; resize: vertical;
+    transition: border-color 0.14s, box-shadow 0.14s;
+    line-height: 1.5;
   }
-  .drawer-field .value a { color: var(--blue); text-decoration: none; }
-  .drawer-field .value a:hover { text-decoration: underline; }
-  .drawer-actions {
-    padding: 14px 24px; border-top: 1px solid var(--border);
+  .drawer-note-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .notes-status {
+    font-size: 11.5px; margin-top: 5px; height: 16px; color: var(--text-muted);
+    transition: color 0.2s;
+  }
+  .notes-status.saved  { color: var(--green); }
+  .notes-status.error  { color: var(--red); }
+  .notes-status.saving { color: var(--accent); }
+
+  /* Chips телефонов */
+  .d-phone-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 9px 14px; border-bottom: 1px solid var(--border);
+  }
+  .d-phone-row:last-child { border-bottom: none; }
+  .d-phone-num {
+    font-size: 13px; font-family: 'JetBrains Mono', monospace;
+    color: var(--text); cursor: pointer; transition: color 0.12s;
+  }
+  .d-phone-num:hover { color: var(--accent); }
+
+  /* Footer с кнопками статуса */
+  .drawer-footer {
+    padding: 14px 16px; border-top: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0;
     display: flex; gap: 8px;
   }
-  .drawer-actions button { flex: 1; justify-content: center; }
+  .drawer-footer button { flex: 1; justify-content: center; font-size: 13px; }
+  .drawer-footer .btn-active {
+    font-weight: 700; opacity: 0.4; cursor: not-allowed;
+  }
 
-  /* Toast */
+  /* ─── Toast ────────────────────────────────────────────────────────────── */
   .toast {
-    position: fixed; bottom: 24px; right: 24px;
-    background: var(--surface); border: 1px solid var(--border-bright);
-    border-left: 3px solid var(--accent);
-    padding: 12px 18px; border-radius: 6px; font-size: 13px;
-    z-index: 200; opacity: 0; transform: translateY(10px);
-    transition: all 0.25s ease; pointer-events: none; max-width: 360px;
+    position: fixed; bottom: 24px; right: 24px; z-index: 200;
+    background: #1c1a17; color: #f5f4f2;
+    padding: 12px 18px; border-radius: var(--radius); font-size: 13px;
+    box-shadow: var(--shadow-lg); opacity: 0; transform: translateY(6px);
+    transition: all 0.2s ease; pointer-events: none;
+    border-left: 3px solid transparent; max-width: 340px;
+    font-weight: 500;
   }
   .toast.show { opacity: 1; transform: translateY(0); }
-  .toast.error { border-left-color: var(--red); }
+  .toast.error   { border-left-color: var(--red); }
   .toast.success { border-left-color: var(--green); }
-  .spin { animation: spin 0.8s linear infinite; }
+
+  .spin { animation: spin 0.75s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Mobile */
-  @media (max-width: 1200px) {
-    .stats { grid-template-columns: repeat(3, 1fr); }
-  }
+  /* ─── Responsive ───────────────────────────────────────────────────────── */
+  @media (max-width: 1200px) { .stats { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 900px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
-    main { padding: 16px; }
-    header { padding: 14px 16px; }
+    main { padding: 14px 16px; }
+    header { padding: 11px 16px; }
     .table-wrap { overflow-x: auto; }
-    table { min-width: 900px; }
+    table { min-width: 860px; }
     .search-wrap .kbd { display: none; }
-    .drawer { width: 100%; }
+    .drawer { width: 100%; border-left: none; }
   }
 </style>
 </head>
@@ -572,28 +734,40 @@
     </div>
   </div>
 
-  <div class="filters">
+  <!-- Ряд 1: поиск + выпадающие фильтры -->
+  <div class="filters-row1">
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" placeholder="Поиск по компании, вакансии, ФИО, БИН...">
+      <input type="search" id="searchInput" placeholder="Поиск по компании, вакансии, ФИО, БИН..."
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+             enterkeyhint="search" inputmode="search">
       <span class="kbd">⌘K</span>
     </div>
-    <select id="filterPosition"></select>
-    <select id="filterCity"><option value="">Все города</option></select>
-    <select id="filterRubric"><option value="">Все рубрики</option></select>
-    <select id="filterStatus">
-      <option value="">Все статусы</option>
-      <option value="new">Новые</option>
-      <option value="in_progress">В работе</option>
-      <option value="contacted">Связались</option>
-      <option value="skip">Пропустить</option>
-    </select>
-    <select id="filterHasPhone">
-      <option value="">С контактами и без</option>
-      <option value="phone">Только с телефоном</option>
-      <option value="email">Только с email</option>
-      <option value="director">Только с ЛПР</option>
-    </select>
+    <div class="filters-dropdowns">
+      <select id="filterPosition"></select>
+      <select id="filterCity"><option value="">Все города</option></select>
+      <select id="filterRubric"><option value="">Все рубрики</option></select>
+      <select id="filterStatus"></select>
+    </div>
+  </div>
+
+  <!-- Ряд 2: быстрые фильтры-pills -->
+  <div class="filters-row2">
+    <button class="cpill" data-val="phone"       onclick="toggleContactPill(this)">📞 Телефон</button>
+    <button class="cpill" data-val="whatsapp"    onclick="toggleContactPill(this)">💬 WhatsApp</button>
+    <button class="cpill" data-val="email"       onclick="toggleContactPill(this)">✉ Email</button>
+    <button class="cpill" data-val="director"    onclick="toggleContactPill(this)">👤 ЛПР</button>
+    <button class="cpill" data-val="no_lpr"      onclick="toggleContactPill(this)">Без ЛПР</button>
+    <button class="cpill" data-val="no_contacts" onclick="toggleContactPill(this)">Без контактов</button>
+    <span class="filters-sep"></span>
+    <button class="dpill dpill-active" data-days="0"  onclick="toggleDatePill(this)">За всё время</button>
+    <button class="dpill" data-days="1"  onclick="toggleDatePill(this)">Сегодня</button>
+    <button class="dpill" data-days="7"  onclick="toggleDatePill(this)">Неделя</button>
+    <button class="dpill" data-days="90" onclick="toggleDatePill(this)">3 месяца</button>
+    <button class="reset-filters-btn" id="resetFiltersBtn" onclick="resetFilters()" title="Сбросить все фильтры">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      Сбросить
+    </button>
   </div>
 
   <div class="selection-bar" id="selectionBar">
@@ -620,6 +794,16 @@
 
   <div class="table-wrap">
     <table>
+      <colgroup>
+        <col style="width:44px">
+        <col style="width:30%">
+        <col style="width:10%">
+        <col style="width:16%">
+        <col style="width:22%">
+        <col style="width:9%">
+        <col style="width:7%">
+        <col style="width:10%">
+      </colgroup>
       <thead>
         <tr>
           <th class="check-cell"><input type="checkbox" class="row-check" id="selectAllCheck" onchange="toggleSelectAll()"></th>
@@ -646,13 +830,18 @@
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer">
   <div class="drawer-header">
-    <div class="drawer-title" id="drawerTitle"></div>
+    <div>
+      <div class="drawer-company" id="drawerTitle"></div>
+      <div class="drawer-vacancy-sub" id="drawerSub"></div>
+    </div>
     <button class="drawer-close" onclick="closeDrawer()" aria-label="Закрыть">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
   </div>
-  <div class="drawer-body" id="drawerBody"></div>
-  <div class="drawer-actions" id="drawerActions"></div>
+  <div class="drawer-scroll">
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+  <div class="drawer-footer" id="drawerActions"></div>
 </aside>
 
 <!-- Settings modal -->
@@ -694,6 +883,32 @@
   </div>
 </div>
 
+<!-- Parser modal — выбор конкретных запросов -->
+<div class="modal-overlay" id="parserModal">
+  <div class="modal parser-modal">
+    <h2>Запустить парсинг</h2>
+    <div class="parser-top-bar">
+      <span class="parser-counter-badge">
+        Выбрано: <strong id="parserSelectedCount">0</strong> из 13
+      </span>
+      <div class="parser-top-bar-btns">
+        <button class="parser-top-btn" onclick="parserSelectAllQueries(true)">Выбрать все</button>
+        <button class="parser-top-btn" onclick="parserSelectAllQueries(false)">Снять все</button>
+      </div>
+    </div>
+    <div class="parser-scroll">
+      <div id="parserQueryList"></div>
+    </div>
+    <div class="parser-footer">
+      <span>~<strong id="parserPagesCount">0</strong> стр. × 100 вак. = до <strong id="parserTotalCount">0</strong> результатов</span>
+    </div>
+    <div class="actions" style="margin-top:14px;">
+      <button onclick="closeParserModal()">Отмена</button>
+      <button class="primary" id="parserRunBtn" onclick="runParser()">Запустить</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -709,6 +924,7 @@ const DEFAULT_CONFIG = {
   wh_lpr:     'https://amiraskar2308.app.n8n.cloud/webhook/find-lpr',
   wh_note:    'https://amiraskar2308.app.n8n.cloud/webhook/lead-note',
 };
+
 
 const SORT_OPTIONS = {
   posted:  l => l.posted || '',
@@ -726,7 +942,7 @@ const STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', conta
 let config = loadConfig();
 let allLeads = [];
 let serverStats = null;
-let filters = { search:'', position:'', city:'', rubric:'', status:'', has:'' };
+let filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:0 };
 let selectedIds = new Set();
 let sortState = { column: 'posted', direction: 'desc' };
 let openLeadId = null;
@@ -772,6 +988,102 @@ async function copyToClipboard(text) {
   }
 }
 
+/* =========================================================================
+   KZ PHONE: классификация мобильный/городской + ссылки на WhatsApp
+   ========================================================================= */
+// Префиксы мобильных операторов Казахстана (3 цифры после кода страны 7)
+const KZ_MOBILE_PREFIXES = new Set([
+  '700', '701', '702', '703', '704', '705', '706', '707', '708', '709', // Kcell/Activ/Beeline
+  '747',                                       // Tele2
+  '750', '751',                                // Altel 4G
+  '760', '761', '762', '763', '764',           // Tele2
+  '771', '774', '775', '776', '777', '778',    // Beeline / Tele2
+]);
+
+// Нормализует номер: убирает всё кроме цифр, конвертит 8XXX в 7XXX
+function normalizePhone(phone) {
+  if (!phone) return null;
+  let d = String(phone).replace(/\D/g, '');
+  if (d.startsWith('8') && d.length === 11) d = '7' + d.slice(1);
+  if (d.length === 10) d = '7' + d;
+  return d;
+}
+
+// 'mobile' | 'landline' | 'unknown'
+function phoneType(phone) {
+  const d = normalizePhone(phone);
+  if (!d || d.length < 11 || !d.startsWith('7')) return 'unknown';
+  const area = d.slice(1, 4);
+  return KZ_MOBILE_PREFIXES.has(area) ? 'mobile' : 'landline';
+}
+
+// ─── Нормализация города ────────────────────────────────────────────────────
+// Алма-Ата, Almaty, алматы → Алматы и т.д.
+// Единственное место в коде — менять только здесь.
+const CITY_MAP = {
+  // Алматы
+  'алма-ата': 'Алматы', 'alma-ata': 'Алматы', 'almaty': 'Алматы',
+  'алмата': 'Алматы', 'алматы': 'Алматы',
+  // Астана / Нур-Султан
+  'нур-султан': 'Астана', 'nur-sultan': 'Астана', 'nursultan': 'Астана',
+  'астана': 'Астана', 'astana': 'Астана',
+  // Шымкент
+  'шимкент': 'Шымкент', 'shymkent': 'Шымкент', 'shimkent': 'Шымкент',
+  // Актобе
+  'актюбинск': 'Актобе', 'aktobe': 'Актобе',
+  // Атырау
+  'atyrau': 'Атырау',
+  // Костанай
+  'кустанай': 'Костанай', 'kostanay': 'Костанай',
+  // Усть-Каменогорск
+  'оскемен': 'Усть-Каменогорск', 'oskemen': 'Усть-Каменогорск',
+  // Актау
+  'шевченко': 'Актау', 'aktau': 'Актау',
+  // Павлодар
+  'pavlodar': 'Павлодар',
+  // Тараз
+  'джамбул': 'Тараз', 'dzhambul': 'Тараз', 'taraz': 'Тараз',
+  // Семей
+  'семипалатинск': 'Семей', 'semipalatinsk': 'Семей', 'semey': 'Семей',
+  // Петропавловск
+  'petropavlovsk': 'Петропавловск',
+  // Уральск
+  'oral': 'Уральск', 'уральск': 'Уральск',
+  // Кокшетау
+  'кокчетав': 'Кокшетау', 'kokshetau': 'Кокшетау',
+  // Кызылорда
+  'kyzylorda': 'Кызылорда', 'кзыл-орда': 'Кызылорда',
+  // Жезказган / Жезқазған
+  'жезказган': 'Жезқазған',
+};
+function normalizeCity(city) {
+  if (!city || city === '—') return city;
+  const key = city.trim().toLowerCase();
+  return CITY_MAP[key] || city.trim();
+}
+
+
+// Возвращает ссылку wa.me если номер мобильный, иначе null
+function waLink(phone) {
+  if (phoneType(phone) !== 'mobile') return null;
+  return 'https://wa.me/' + normalizePhone(phone);
+}
+
+// HTML для иконки WA рядом с мобильным номером
+const WA_ICON_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>';
+
+const _waIconCache = new Map();
+function waIconHtml(phone) {
+  if (!phone) return '';
+  if (_waIconCache.has(phone)) return _waIconCache.get(phone);
+  const link = waLink(phone);
+  const html = link
+    ? `<a href="${esc(link)}" target="_blank" class="wa-icon" title="Открыть в WhatsApp" onclick="event.stopPropagation()">${WA_ICON_SVG}</a>`
+    : '';
+  _waIconCache.set(phone, html);
+  return html;
+}
+
 /* Если в БД position_type не выставлен (или 'other'), пытаемся определить
    по названию вакансии. Делает фильтр устойчивым даже если парсер не выставил
    тип позиции.
@@ -795,14 +1107,60 @@ function detectPosition(vacancy) {
 }
 
 function normalizeLead(l) {
-  // Доверяем БД только если там явно 'rop' или 'hr'.
-  // Во всех остальных случаях — определяем из vacancy_title.
+  // position_type: доверяем БД если там 'rop' или 'hr', иначе определяем из вакансии
   const stored = (l.position_type || '').toString().toLowerCase().trim();
-  if (stored === 'rop' || stored === 'hr') {
-    return { ...l, position_type: stored };
-  }
-  return { ...l, position_type: detectPosition(l.vacancy) };
+  const position_type = (stored === 'rop' || stored === 'hr')
+    ? stored
+    : detectPosition(l.vacancy);
+
+  // category: БД (HH_Parser v2) теперь всегда возвращает осмысленное значение.
+  // detectCategory() — фолбэк ТОЛЬКО для строк, где БД вернула 'other' или пусто
+  // (старые записи до миграции v2). Не используем как fallback по умолчанию,
+  // чтобы не было расхождения с серверной классификацией.
+  const VALID_CATS = new Set(['fitness','clinic','edu','beauty','sales','signal']);
+  const dbCat = (l.category || '').toLowerCase().trim();
+  const category = VALID_CATS.has(dbCat) ? dbCat
+    : (dbCat === 'other' || dbCat === '') ? detectCategory(l.vacancy)
+    : 'other';
+
+  const city = normalizeCity(l.city);
+  return { ...l, position_type, category, city };
 }
+
+/* Категоризация — ФОЛБЭК для старых записей без поля category.
+   ИСТОЧНИК ИСТИНЫ: HH_Parser_v2 → Normalize (detectCategory) в n8n.
+   При изменении логики синхронизировать оба места ОДНОВРЕМЕННО:
+     - frontend/Beta_1_v4.html (эта функция)
+     - n8n/HH_Parser_v2.json → Normalize node → detectCategory()
+     - sql/schema_migration.sql (CASE для бэкфилла существующих записей) */
+function detectCategory(vacancy) {
+  if (!vacancy) return 'other';
+  const n = String(vacancy).toLowerCase();
+
+  // Tier 1 — ICP
+  if (/фитнес|фитнесс|спорт.*клуб|тренаж[её]р|кросс?фит/.test(n)) return 'fitness';
+  if (/клиник|стоматолог|медицин.*центр|больниц|медцентр|поликлиник/.test(n)) return 'clinic';
+  if (/онлайн.*школ|курс|академи|учеб|образован|edtech|преподавател|репетитор|обучени/.test(n)) return 'edu';
+  if (/салон.*красот|бьюти|парикмахер|косметолог|маникюр|barber|nail/.test(n)) return 'beauty';
+
+  // Tier 2 — Sales leadership
+  if (/руководитель.*продаж|начальник.*продаж|роп|head\s+of\s+sales|sales\s+(director|head|lead)|коммерческий\s+директор|директор\s+по\s+продажам|sales\s+operations|crm.*менеджер/.test(n)) return 'sales';
+
+  // Tier 3 — Signals
+  if (/customer\s+success|talent\s+acquisition|head\s+of\s+people|маркетинг|head\s+of\s+marketing|b2b.*продаж|менеджер по продажам/.test(n)) return 'signal';
+
+  return 'other';
+}
+
+const CATEGORY_META = {
+  fitness: { label: 'Фитнес',                tier: 1, color: 'accent' },
+  clinic:  { label: 'Клиники',               tier: 1, color: 'accent' },
+  edu:     { label: 'Образование',           tier: 1, color: 'accent' },
+  beauty:  { label: 'Бьюти',                 tier: 1, color: 'accent' },
+  sales:   { label: 'Руководители продаж',   tier: 2, color: 'blue'   },
+  signal:  { label: 'Сигналы роста',         tier: 3, color: 'amber'  },
+  other:   { label: 'Другое',                tier: 0, color: 'dim'    },
+};
 
 let toastTimer = null;
 function toast(msg, variant) {
@@ -847,6 +1205,9 @@ function saveSettings() {
 document.getElementById('settingsModal').addEventListener('click', e => {
   if (e.target.id === 'settingsModal') closeModal();
 });
+document.getElementById('parserModal').addEventListener('click', e => {
+  if (e.target.id === 'parserModal') closeParserModal();
+});
 
 /* =========================================================================
    API
@@ -885,27 +1246,154 @@ async function fetchStats() {
     updateStats();
   } catch (e) { serverStats = null; }
 }
-async function triggerRefresh() {
-  if (!config.wh_refresh) { toast('Сначала укажи webhook URL в настройках ⚙', true); return; }
-  const btn = document.getElementById('refreshBtn');
+/* =========================================================================
+   PARSER QUERIES CATALOG — три тира под ICP AI Closer
+   ========================================================================= */
+const PARSING_QUERIES = [
+  // Tier 1 — Целевой ICP (фитнес/клиники/образование/бьюти)
+  { id: 'fitness_admin',  label: 'Фитнес — администраторы',           text: 'администратор фитнес клуб',         pages: 2, tier: 1, category: 'fitness' },
+  { id: 'fitness_sales',  label: 'Фитнес — продажи абонементов',       text: 'менеджер по продажам фитнес',       pages: 2, tier: 1, category: 'fitness' },
+  { id: 'clinic_admin',   label: 'Клиники — администраторы',           text: 'администратор клиника медицинский', pages: 2, tier: 1, category: 'clinic'  },
+  { id: 'edu_curator',    label: 'Образование — кураторы и менеджеры', text: 'куратор учеников онлайн школа',     pages: 2, tier: 1, category: 'edu'     },
+  { id: 'beauty_admin',   label: 'Бьюти — администраторы салонов',     text: 'администратор салон красоты',       pages: 1, tier: 1, category: 'beauty'  },
+  // Tier 2 — Руководители продаж (любая отрасль)
+  { id: 'rop',            label: 'РОП / Руководитель отдела продаж',   text: 'руководитель отдела продаж',        pages: 2, tier: 2, category: 'sales'   },
+  { id: 'head_of_sales',  label: 'Head of Sales',                       text: 'head of sales',                     pages: 1, tier: 2, category: 'sales'   },
+  { id: 'commercial_dir', label: 'Коммерческий директор',               text: 'коммерческий директор',             pages: 2, tier: 2, category: 'sales'   },
+  { id: 'sales_director', label: 'Директор по продажам',                text: 'директор по продажам',              pages: 1, tier: 2, category: 'sales'   },
+  { id: 'sales_ops',      label: 'Sales Operations / CRM-менеджер',     text: 'sales operations CRM менеджер',     pages: 1, tier: 2, category: 'sales'   },
+  // Tier 3 — Сигналы (массовый найм, маркетинг, SaaS)
+  { id: 'mass_b2b',       label: 'B2B-продажники (массовый найм)',      text: 'менеджер по продажам B2B',          pages: 2, tier: 3, category: 'signal'  },
+  { id: 'cust_success',   label: 'Customer Success Manager (SaaS)',     text: 'customer success manager',          pages: 1, tier: 3, category: 'signal'  },
+  { id: 'marketing_dir',  label: 'Директор по маркетингу',              text: 'директор по маркетингу',            pages: 1, tier: 3, category: 'signal'  },
+];
+
+const TIER_META = {
+  1: { label: '🎯 Тир 1 — Целевой ICP',          hint: 'Фитнес, клиники, образование, бьюти — прямые покупатели AI Closer', categories: ['fitness','clinic','edu','beauty'] },
+  2: { label: '💼 Тир 2 — Руководители продаж',  hint: 'РОП / коммерческие директора в любой индустрии',                   categories: ['sales']                          },
+  3: { label: '📊 Тир 3 — Сигналы роста',        hint: 'Массовый найм, маркетинг, Customer Success — компании в стадии роста', categories: ['signal']                      },
+};
+
+// Множественный выбор запросов парсера
+const selectedParserIds = new Set(PARSING_QUERIES.map(q => q.id)); // по умолчанию все
+
+function renderParserModal() {
+  const container = document.getElementById('parserQueryList');
+  if (!container) return;
+  let html = '';
+  for (const [tierNum, meta] of Object.entries(TIER_META)) {
+    const tierQueries = PARSING_QUERIES.filter(q => q.tier === parseInt(tierNum));
+    const allChecked = tierQueries.every(q => selectedParserIds.has(q.id));
+    const someChecked = tierQueries.some(q => selectedParserIds.has(q.id));
+    html += `<div class="parser-tier-group">
+      <div class="parser-tier-label" onclick="parserToggleTier(${tierNum})">
+        <span>${meta.label}</span>
+        <span class="parser-tier-label-toggle">${allChecked ? 'снять' : someChecked ? 'все' : 'все'}</span>
+      </div>
+      <div class="parser-query-list">`;
+    for (const q of tierQueries) {
+      const chk = selectedParserIds.has(q.id);
+      const vacCount = q.pages * 100;
+      html += `<label class="parser-query-item ${chk ? 'pq-checked' : ''}" onclick="parserToggleQuery('${q.id}', this)">
+        <input type="checkbox" ${chk ? 'checked' : ''} onclick="event.preventDefault()">
+        <span class="pq-label">${esc(q.label)}</span>
+        <span class="pq-pages">до ${vacCount}</span>
+      </label>`;
+    }
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+  parserUpdateSummary();
+}
+
+function parserToggleQuery(id, el) {
+  if (selectedParserIds.has(id)) selectedParserIds.delete(id);
+  else selectedParserIds.add(id);
+  el.classList.toggle('pq-checked', selectedParserIds.has(id));
+  const cb = el.querySelector('input[type="checkbox"]');
+  if (cb) cb.checked = selectedParserIds.has(id);
+  parserUpdateSummary();
+  // Обновляем кнопку тира
+  const q = PARSING_QUERIES.find(q => q.id === id);
+  if (q) {
+    const tierQueries = PARSING_QUERIES.filter(qq => qq.tier === q.tier);
+    const allChk = tierQueries.every(qq => selectedParserIds.has(qq.id));
+    const header = el.closest('.parser-tier-group')?.querySelector('.parser-tier-toggle');
+    if (header) header.textContent = allChk ? 'Снять' : 'Все';
+  }
+}
+
+function parserToggleTier(tierNum) {
+  const tierQueries = PARSING_QUERIES.filter(q => q.tier === tierNum);
+  const allChecked = tierQueries.every(q => selectedParserIds.has(q.id));
+  tierQueries.forEach(q => allChecked ? selectedParserIds.delete(q.id) : selectedParserIds.add(q.id));
+  renderParserModal();
+}
+
+function parserSelectAllQueries(select) {
+  PARSING_QUERIES.forEach(q => select ? selectedParserIds.add(q.id) : selectedParserIds.delete(q.id));
+  renderParserModal();
+}
+
+function parserUpdateSummary() {
+  const selected = PARSING_QUERIES.filter(q => selectedParserIds.has(q.id));
+  const pages = selected.reduce((s, q) => s + q.pages, 0);
+  const countEl = document.getElementById('parserSelectedCount');
+  const pagesEl = document.getElementById('parserPagesCount');
+  const totalEl = document.getElementById('parserTotalCount');
+  if (countEl) countEl.textContent = selected.length;
+  if (pagesEl) pagesEl.textContent = pages;
+  if (totalEl) totalEl.textContent = (pages * 100).toLocaleString('ru');
+  const runBtn = document.getElementById('parserRunBtn');
+  if (runBtn) runBtn.disabled = selected.length === 0;
+}
+
+function openParserModal() {
+  if (!config.wh_refresh) {
+    toast('Сначала укажи webhook URL в настройках ⚙', true);
+    return;
+  }
+  renderParserModal();
+  document.getElementById('parserModal').classList.add('open');
+}
+function closeParserModal() {
+  document.getElementById('parserModal').classList.remove('open');
+}
+
+async function runParser() {
+  const queries = PARSING_QUERIES
+    .filter(q => selectedParserIds.has(q.id))
+    .map(q => ({ id: q.id, text: q.text, pages: q.pages }));
+  if (queries.length === 0) { toast('Выбери хотя бы один запрос', true); return; }
+
+  closeParserModal();
+
+  const btn  = document.getElementById('refreshBtn');
   const icon = document.getElementById('refreshIcon');
   const text = document.getElementById('refreshText');
-  const originalText = text.textContent;
+  const orig = text.textContent;
   btn.disabled = true;
   icon.classList.add('spin');
   text.textContent = 'Парсинг идёт...';
+
   try {
-    await fetch(config.wh_refresh, { method: 'POST' });
-    toast('Парсинг запущен! Через минуту обновлю данные.', 'success');
-    setTimeout(fetchLeads, 60000);
+    await fetch(config.wh_refresh, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ queries })
+    });
+    toast(`Запущено ${queries.length} запросов. Через минуту обновлю.`, 'success');
+    setTimeout(() => fetchLeads({ showSkeleton: false, preserveScroll: true }), 60000);
   } catch (e) {
     toast('Ошибка запуска: ' + e.message, true);
   } finally {
     btn.disabled = false;
     icon.classList.remove('spin');
-    text.textContent = originalText;
+    text.textContent = orig;
   }
 }
+
+async function triggerRefresh() { openParserModal(); }
 async function updateStatus(id, newStatus) {
   if (!config.wh_status) { toast('Webhook для статусов не настроен ⚙', true); return; }
   try {
@@ -1042,21 +1530,7 @@ document.getElementById('refreshBtn').addEventListener('click', triggerRefresh);
    ФИЛЬТРАЦИЯ / СОРТИРОВКА / РЕНДЕР
    ========================================================================= */
 function applyFilters(leads) {
-  const q = filters.search.toLowerCase().trim();
-  return leads.filter(l => {
-    if (q) {
-      const hay = `${l.company} ${l.vacancy} ${l.director || ''} ${l.city || ''} ${l.bin || ''} ${l.rubric || ''}`.toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    if (filters.position && l.position_type !== filters.position) return false;
-    if (filters.city && l.city !== filters.city) return false;
-    if (filters.rubric && l.rubric !== filters.rubric) return false;
-    if (filters.status && l.status !== filters.status) return false;
-    if (filters.has === 'phone'    && !l.phone) return false;
-    if (filters.has === 'email'    && !l.email) return false;
-    if (filters.has === 'director' && !l.director) return false;
-    return true;
-  });
+  return leads.filter(l => ALL_FILTER_KEYS.every(k => matchesFilter(l, k)));
 }
 function applySort(leads) {
   const fn = SORT_OPTIONS[sortState.column];
@@ -1071,11 +1545,25 @@ function applySort(leads) {
 }
 function showLoadingSkeleton() {
   const tbody = document.getElementById('leadsBody');
-  tbody.innerHTML = Array.from({length: 6}).map(() =>
-    `<tr><td colspan="8" class="skeleton-row"></td></tr>`).join('');
+  tbody.innerHTML = Array.from({length: 6}).map(() => `
+    <tr>
+      <td><div class="cell"><div class="skeleton-line xshort"></div></div></td>
+      <td><div class="cell"><div class="skeleton-line" style="margin-bottom:5px"></div><div class="skeleton-line short"></div></div></td>
+      <td><div class="cell"><div class="skeleton-line xshort"></div></div></td>
+      <td><div class="cell"><div class="skeleton-line short"></div></div></td>
+      <td><div class="cell"><div class="skeleton-line"></div></div></td>
+      <td><div class="cell"><div class="skeleton-line xshort"></div></div></td>
+      <td><div class="cell"><div class="skeleton-line xshort"></div></div></td>
+      <td><div class="cell"><div class="skeleton-line short"></div></div></td>
+    </tr>`).join('');
   document.getElementById('emptyState').style.display = 'none';
 }
+// Виртуальный список: рендерим порциями
+const PAGE_SIZE = 100;
+let _renderGeneration = 0;  // отменяем устаревшие рендеры
+
 function render() {
+  const gen = ++_renderGeneration;
   const filtered = applySort(applyFilters(allLeads));
   const tbody = document.getElementById('leadsBody');
   const empty = document.getElementById('emptyState');
@@ -1085,62 +1573,115 @@ function render() {
     empty.style.display = 'block';
   } else {
     empty.style.display = 'none';
-    tbody.innerHTML = filtered.map(rowHtml).join('');
+    // Строим HTML первых PAGE_SIZE строк синхронно — это мгновенно
+    const visible = filtered.slice(0, PAGE_SIZE);
+    tbody.innerHTML = visible.map(rowHtml).join('');
+    // Остальные строки добрендериваем асинхронно чтобы не блокировать UI
+    if (filtered.length > PAGE_SIZE) {
+      renderRemainingRows(filtered, PAGE_SIZE, gen, tbody);
+    }
   }
-  updateStats();
-  updateCityFilter();
-  updatePositionFilter();
-  updateRubricFilter();
-  updateSortIndicators();
+
+  // Обновляем dropdown'ы и стату через rAF — не блокируют первый кадр
+  requestAnimationFrame(() => {
+    if (gen !== _renderGeneration) return; // устарело
+    updateStats();
+    updateSortIndicators();
+    // dropdown'ы — ещё один кадр позже (они самые тяжёлые)
+    requestAnimationFrame(() => {
+      if (gen !== _renderGeneration) return;
+      updateCityFilter();
+      updatePositionFilter();
+      updateRubricFilter();
+      updateStatusFilter();
+    });
+  });
+}
+
+function renderRemainingRows(filtered, startIdx, gen, tbody) {
+  // Рендерим по CHUNK строк за раз, уступая браузеру между чанками
+  const CHUNK = 100;
+  let idx = startIdx;
+  function renderChunk() {
+    if (gen !== _renderGeneration) return; // рендер устарел — стоп
+    const chunk = filtered.slice(idx, idx + CHUNK);
+    if (chunk.length === 0) return;
+    const html = chunk.map(rowHtml).join('');
+    tbody.insertAdjacentHTML('beforeend', html);
+    idx += CHUNK;
+    if (idx < filtered.length) {
+      // Следующий чанк — через setTimeout(0) чтобы браузер мог обработать события
+      setTimeout(renderChunk, 0);
+    }
+  }
+  setTimeout(renderChunk, 0);
 }
 function rowHtml(l) {
   const sid = String(l.id);
   const isSelected = selectedIds.has(sid);
   const isOpen = openLeadId === sid;
-  const posBadge = l.position_type && l.position_type !== 'other'
-    ? `<span class="position-badge ${esc(l.position_type)}">${esc(l.position_type)}</span>` : '';
+  const catMeta = l.category && CATEGORY_META[l.category];
+  const catBadge = catMeta && l.category !== 'other'
+    ? `<span class="category-badge tier-${catMeta.tier}">${esc(catMeta.label.toLowerCase())}</span>` : '';
 
-  // Hot lead: есть контакт (phone OR email) и есть директор
-  const isHot = !!((l.phone || l.email) && l.director);
   const hasNote = !!(l.notes && l.notes.trim());
 
   const classes = [
     isSelected ? 'selected' : '',
     isOpen     ? 'opened'   : '',
-    isHot      ? 'hot'      : '',
   ].filter(Boolean).join(' ');
 
   return `
     <tr class="${classes}" data-id="${esc(sid)}" data-status="${esc(l.status || 'new')}">
-      <td class="check-cell"><input type="checkbox" class="row-check" data-id="${esc(sid)}" ${isSelected ? 'checked' : ''} onchange="toggleSelection('${esc(sid)}', this.checked); event.stopPropagation();" onclick="event.stopPropagation()"></td>
-      <td class="company-cell" onclick="openDrawer('${esc(sid)}')">
-        <div class="company-name">${esc(l.company)}${posBadge}${hasNote ? '<span class="note-indicator" title="Есть заметка">💬</span>' : ''}</div>
-        <div class="vacancy-name">${esc(l.vacancy || '')}</div>
-        ${l.rubric ? `<div class="company-rubric">${esc(l.rubric)}</div>` : ''}
+      <td class="check-cell">
+        <div class="cell" style="display:flex;align-items:center;justify-content:center;padding:0 0 0 14px;min-height:54px;">
+          <input type="checkbox" class="row-check" data-id="${esc(sid)}" ${isSelected ? 'checked' : ''}
+            onchange="toggleSelection('${esc(sid)}', this.checked); event.stopPropagation();"
+            onclick="event.stopPropagation()">
+        </div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')">${esc(l.city || '—')}</td>
-      <td class="contact-cell" onclick="openDrawer('${esc(sid)}')">
-        ${l.phone   ? `<div class="contact-row"><span class="icon">☏</span><span class="copyable mono" onclick="copyToClipboard('${esc(l.phone)}'); event.stopPropagation();">${esc(l.phone)}</span></div>` : ''}
-        ${l.email   ? `<div class="contact-row"><span class="icon">@</span><span class="copyable" onclick="copyToClipboard('${esc(l.email)}'); event.stopPropagation();">${esc(l.email)}</span></div>` : ''}
-        ${l.website ? `<div class="contact-row"><span class="icon">↗</span><a href="${esc(normUrl(l.website))}" target="_blank" onclick="event.stopPropagation()">${esc(l.website)}</a></div>` : ''}
-        ${(!l.phone && !l.email && !l.website) ? '<span style="color:var(--text-dim)">—</span>' : ''}
-        ${l.address ? `<div class="contact-address">${esc(l.address)}</div>` : ''}
+      <td onclick="openDrawer('${esc(sid)}')">
+        <div class="cell">
+          <div class="company-name">${esc(l.company)}${catBadge}${hasNote ? '<span class="note-indicator" title="Есть заметка">💬</span>' : ''}</div>
+          <div class="vacancy-title" title="${esc(l.vacancy || '')}">${esc(l.vacancy || '')}</div>
+          ${l.rubric ? `<span class="rubric-tag" title="${esc(l.rubric)}">${esc(l.rubric)}</span>` : ''}
+        </div>
       </td>
-      <td class="director-cell" onclick="openDrawer('${esc(sid)}')">
-        ${l.director
-          ? `<div class="director-name">${esc(l.director)}</div>${l.director_position ? `<div class="director-meta">${esc(l.director_position)}</div>` : ''}`
-          : '<span style="color:var(--text-dim)">не найдено</span>'}
-        ${l.bin ? `<div class="director-bin" onclick="copyToClipboard('${esc(l.bin)}'); event.stopPropagation();" title="БИН (клик скопирует)">БИН ${esc(l.bin)}</div>` : ''}
+      <td onclick="openDrawer('${esc(sid)}')">
+        <div class="cell" style="color:var(--text-mid);font-size:13px;">${esc(l.city || '—')}</div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')"><div class="sources">${renderSources(l)}</div></td>
-      <td class="mono" style="color:var(--text-muted)" onclick="openDrawer('${esc(sid)}')">${esc(l.posted || '')}</td>
-      <td class="status-cell">
-        <select class="status-select status-${l.status || 'new'}" data-id="${esc(sid)}" onchange="onStatusChange(this); event.stopPropagation();" onclick="event.stopPropagation()">
-          <option value="new"         ${l.status === 'new' ? 'selected' : ''}>Новый</option>
-          <option value="in_progress" ${l.status === 'in_progress' ? 'selected' : ''}>В работе</option>
-          <option value="contacted"   ${l.status === 'contacted' ? 'selected' : ''}>Связались</option>
-          <option value="skip"        ${l.status === 'skip' ? 'selected' : ''}>Пропустить</option>
-        </select>
+      <td onclick="openDrawer('${esc(sid)}')">
+        <div class="cell">
+          ${l.phone   ? `<div class="contact-row"><span class="icon">☏</span><span class="copyable mono" onclick="copyToClipboard('${esc(l.phone)}'); event.stopPropagation();">${esc(l.phone)}</span>${waIconHtml(l.phone)}</div>` : ''}
+          ${l.email   ? `<div class="contact-row"><span class="icon">@</span><span class="copyable" onclick="copyToClipboard('${esc(l.email)}'); event.stopPropagation();">${esc(l.email)}</span></div>` : ''}
+          ${l.website ? `<div class="contact-row"><span class="icon">↗</span><a href="${esc(normUrl(l.website))}" target="_blank" onclick="event.stopPropagation()" style="color:var(--text-mid);text-decoration:none;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-mid)'">${esc(l.website)}</a></div>` : ''}
+          ${(!l.phone && !l.email && !l.website) ? '<span style="color:var(--text-muted)">—</span>' : ''}
+        </div>
+      </td>
+      <td onclick="openDrawer('${esc(sid)}')">
+        <div class="cell">
+          ${l.director
+            ? `<div class="director-row copyable" onclick="copyToClipboard('${esc(l.director)}'); event.stopPropagation();" title="Скопировать ФИО">${esc(l.director)}</div>${l.director_position ? `<div class="director-pos">${esc(l.director_position)}</div>` : ''}${l.bin ? `<div class="director-bin" onclick="copyToClipboard('${esc(l.bin)}'); event.stopPropagation();" title="Скопировать БИН">БИН ${esc(l.bin)}</div>` : ''}`
+            : '<span style="color:var(--text-muted);font-size:12.5px;">—</span>'}
+        </div>
+      </td>
+      <td onclick="openDrawer('${esc(sid)}')">
+        <div class="cell">${renderSources(l)}</div>
+      </td>
+      <td onclick="openDrawer('${esc(sid)}')">
+        <div class="cell mono" style="color:var(--text-muted);font-size:12px;">${esc((l.posted || '').slice(5))}</div>
+      </td>
+      <td>
+        <div class="cell" style="padding-right:12px;">
+          <select class="status-select status-${l.status || 'new'}" data-id="${esc(sid)}"
+            onchange="onStatusChange(this); event.stopPropagation();"
+            onclick="event.stopPropagation()">
+            <option value="new"         ${l.status === 'new'         ? 'selected' : ''}>Новый</option>
+            <option value="in_progress" ${l.status === 'in_progress' ? 'selected' : ''}>В работе</option>
+            <option value="contacted"   ${l.status === 'contacted'   ? 'selected' : ''}>Связались</option>
+            <option value="skip"        ${l.status === 'skip'        ? 'selected' : ''}>Пропустить</option>
+          </select>
+        </div>
       </td>
     </tr>
   `;
@@ -1148,10 +1689,10 @@ function rowHtml(l) {
 function onStatusChange(sel) {
   const id = sel.dataset.id;
   const status = sel.value;
-  sel.className = 'status-select status-' + status;
-  updateStatus(id, status);
+  sel.className = `status-select status-${status}`;
   const lead = allLeads.find(l => String(l.id) === String(id));
   if (lead) lead.status = status;
+  updateStatus(id, status);
 }
 function renderSources(l) {
   let lprUrl = null;
@@ -1182,46 +1723,82 @@ function openDrawer(id) {
   openLeadId = String(id);
 
   document.getElementById('drawerTitle').textContent = lead.company || '—';
+  document.getElementById('drawerSub').textContent = lead.vacancy || '';
 
   const body = document.getElementById('drawerBody');
   const lprUrl = lead.statsnet_url ? normUrl(lead.statsnet_url)
     : (lead.bin ? `https://ba.prg.kz/list/?text=${encodeURIComponent(lead.bin)}` : null);
 
   body.innerHTML = `
-    <div class="drawer-section">
-      <h3>Заметки</h3>
-      <textarea class="notes-textarea" id="leadNotes" placeholder="Записать комментарий: когда звонил, что сказали, когда перезвонить..."></textarea>
-      <div class="notes-status" id="notesStatus"></div>
+    <!-- Заметки -->
+    <div class="d-card">
+      <div class="d-card-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Заметки
+      </div>
+      <div class="d-notes-wrap">
+        <textarea class="drawer-note-area" id="leadNotes" placeholder="Когда звонил, что сказали, когда перезвонить..."></textarea>
+        <div class="notes-status" id="notesStatus"></div>
+      </div>
     </div>
-    <div class="drawer-section">
-      <h3>Вакансия</h3>
-      ${field('Название', lead.vacancy)}
-      ${field('Тип', POSITION_LABELS[lead.position_type] || lead.position_type)}
-      ${field('Город', lead.city)}
-      ${field('Дата публикации', lead.posted)}
-      ${lead.hh_url ? `<div class="drawer-field"><span class="label">HH</span><span class="value"><a href="${esc(lead.hh_url)}" target="_blank">Открыть на hh.kz ↗</a></span></div>` : ''}
+
+    <!-- Контакты -->
+    <div class="d-card">
+      <div class="d-card-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 15.92z"/></svg>
+        Контакты
+      </div>
+      <div class="d-card-body">
+        ${lead.phone ? drow('Телефон', `<span class="copyable mono" onclick="copyToClipboard('${esc(lead.phone)}')">${esc(lead.phone)}</span>${waIconHtml(lead.phone)}`) : ''}
+        ${renderExtraPhones(lead.phone_extra)}
+        ${lead.email ? drow('Email', `<span class="copyable" onclick="copyToClipboard('${esc(lead.email)}')">${esc(lead.email)}</span>`) : ''}
+        ${lead.website ? drow('Сайт', `<a href="${esc(normUrl(lead.website))}" target="_blank">${esc(lead.website)}</a>`) : ''}
+        ${(!lead.phone && !lead.email && !lead.website) ? `<div class="d-row"><span class="d-value muted">Контакты не найдены — запусти 2GIS обогащение</span></div>` : ''}
+      </div>
     </div>
-    <div class="drawer-section">
-      <h3>Компания</h3>
-      ${field('Название', lead.company)}
-      ${lead.rubric ? field('Рубрика', lead.rubric) : ''}
-      ${lead.bin ? `<div class="drawer-field"><span class="label">БИН</span><span class="value copyable mono" onclick="copyToClipboard('${esc(lead.bin)}')">${esc(lead.bin)}</span></div>` : ''}
-      ${lead.address ? field('Адрес', lead.address) : ''}
-      ${lead.gis_url ? `<div class="drawer-field"><span class="label">2GIS</span><span class="value"><a href="${esc(lead.gis_url)}" target="_blank">Карточка на 2GIS ↗</a></span></div>` : ''}
-      ${lprUrl ? `<div class="drawer-field"><span class="label">Реестр ЛПР</span><span class="value"><a href="${esc(lprUrl)}" target="_blank">Открыть на ba.prg.kz ↗</a></span></div>` : ''}
+
+    <!-- ЛПР -->
+    <div class="d-card">
+      <div class="d-card-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        ЛПР — лицо принимающее решения
+      </div>
+      <div class="d-card-body">
+        ${lead.director
+          ? drow('ФИО', `<strong class="copyable" onclick="copyToClipboard('${esc(lead.director)}')" title="Скопировать ФИО">${esc(lead.director)}</strong>`) +
+            (lead.director_position ? drow('Должность', esc(lead.director_position)) : '') +
+            (lead.bin ? drow('БИН', `<span class="copyable mono" onclick="copyToClipboard('${esc(lead.bin)}')" title="Скопировать">${esc(lead.bin)}</span>`) : '') +
+            (lprUrl ? drow('Реестр', `<a href="${esc(lprUrl)}" target="_blank">ba.prg.kz ↗</a>`) : '')
+          : `<div class="d-row"><span class="d-value muted">Не найден — запусти поиск ЛПР</span></div>`}
+      </div>
     </div>
-    <div class="drawer-section">
-      <h3>Контакты</h3>
-      ${lead.phone   ? `<div class="drawer-field"><span class="label">Телефон</span><span class="value copyable mono" onclick="copyToClipboard('${esc(lead.phone)}')">${esc(lead.phone)}</span></div>` : ''}
-      ${lead.phone_extra ? `<div class="drawer-field"><span class="label">Доп. телефоны</span><span class="value copyable mono" onclick="copyToClipboard('${esc(lead.phone_extra)}')">${esc(lead.phone_extra)}</span></div>` : ''}
-      ${lead.email   ? `<div class="drawer-field"><span class="label">Email</span><span class="value copyable" onclick="copyToClipboard('${esc(lead.email)}')">${esc(lead.email)}</span></div>` : ''}
-      ${lead.website ? `<div class="drawer-field"><span class="label">Сайт</span><span class="value"><a href="${esc(normUrl(lead.website))}" target="_blank">${esc(lead.website)} ↗</a></span></div>` : ''}
-      ${(!lead.phone && !lead.email && !lead.website) ? '<div class="drawer-field"><span class="value empty">Контакты не найдены. Запусти обогащение через 2GIS.</span></div>' : ''}
+
+    <!-- Вакансия -->
+    <div class="d-card">
+      <div class="d-card-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        Вакансия
+      </div>
+      <div class="d-card-body">
+        ${drow('Название', esc(lead.vacancy))}
+        ${lead.rubric ? drow('Рубрика', esc(lead.rubric)) : ''}
+        ${lead.city   ? drow('Город',   esc(lead.city))   : ''}
+        ${lead.posted ? drow('Дата',    esc(lead.posted))  : ''}
+        ${lead.hh_url ? drow('HH.kz', `<a href="${esc(lead.hh_url)}" target="_blank">Открыть вакансию ↗</a>`) : ''}
+      </div>
     </div>
-    <div class="drawer-section">
-      <h3>ЛПР</h3>
-      ${lead.director ? field('ФИО', lead.director) : '<div class="drawer-field"><span class="value empty">Не найден. Запусти поиск ЛПР.</span></div>'}
-      ${lead.director_position ? field('Должность', lead.director_position) : ''}
+
+    <!-- Компания -->
+    <div class="d-card">
+      <div class="d-card-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Компания
+      </div>
+      <div class="d-card-body">
+        ${drow('Название', esc(lead.company))}
+        ${lead.address ? drow('Адрес',   esc(lead.address)) : ''}
+        ${lead.gis_url ? drow('2GIS',    `<a href="${esc(lead.gis_url)}" target="_blank">Карточка ↗</a>`) : ''}
+      </div>
     </div>
   `;
 
@@ -1341,6 +1918,20 @@ function field(label, value) {
   if (!value) return '';
   return `<div class="drawer-field"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`;
 }
+// drow: строка в d-card — лейбл слева, значение справа
+function drow(label, valueHtml) {
+  return `<div class="d-row"><span class="d-label">${esc(label)}</span><span class="d-value">${valueHtml}</span></div>`;
+}
+
+// Разбивает phone_extra (типа "+7 700 1234567, +7 717 9876543") на отдельные
+// строки, у каждой свой WA-индикатор если номер мобильный.
+function renderExtraPhones(phoneExtra) {
+  if (!phoneExtra) return '';
+  const phones = String(phoneExtra).split(',').map(s => s.trim()).filter(Boolean);
+  return phones.map(p =>
+    drow('Доп. тел.', `<span class="copyable mono" onclick="copyToClipboard('${esc(p)}')">${esc(p)}</span>${waIconHtml(p)}`)
+  ).join('');
+}
 async function quickStatus(id, status) {
   const lead = allLeads.find(l => String(l.id) === String(id));
   if (lead) lead.status = status;
@@ -1354,41 +1945,146 @@ async function quickStatus(id, status) {
 /* =========================================================================
    FILTER DROPDOWNS
    ========================================================================= */
+// Кеш leadsExcluding — пересчитываем только при смене фильтров
+let _excludingCache = {};
+let _excludingFiltersSnapshot = '';
+
+function _getExcludingCacheKey() {
+  return JSON.stringify({ s: filters.search, p: filters.position, c: filters.city,
+                          r: filters.rubric, st: filters.status, h: filters.has, d: filters.date });
+}
+
+function leadsExcludingCached(skip) {
+  const snap = _getExcludingCacheKey();
+  if (snap !== _excludingFiltersSnapshot) {
+    _excludingCache = {};
+    _excludingFiltersSnapshot = snap;
+  }
+  if (!_excludingCache[skip]) {
+    _excludingCache[skip] = leadsExcluding(skip);
+  }
+  return _excludingCache[skip];
+}
+
+// Применяет один предикат фильтра (по ключу) к лиду
+function matchesFilter(l, key) {
+  switch (key) {
+    case 'search': {
+      const q = filters.search.toLowerCase().trim();
+      if (!q) return true;
+      const catLabel = CATEGORY_META[l.category]?.label || '';
+      const hay = `${l.company} ${l.vacancy} ${l.director||''} ${l.city||''} ${l.bin||''} ${l.rubric||''} ${catLabel}`.toLowerCase();
+      return hay.includes(q);
+    }
+    case 'position': return !filters.position || l.category === filters.position;
+    case 'city':     return !filters.city     || l.city     === filters.city;
+    case 'rubric':   return !filters.rubric   || l.rubric   === filters.rubric;
+    case 'status':   return !filters.status   || l.status   === filters.status;
+    case 'has': {
+      const h = filters.has;
+      if (!h) return true;
+      if (h === 'phone')    return !!l.phone;
+      if (h === 'email')    return !!l.email;
+      if (h === 'director') return !!l.director;
+      if (h === 'no_lpr')   return !l.director;
+      if (h === 'no_contacts') return !(l.phone || l.email || l.website);
+      if (h === 'whatsapp') {
+        const all = [l.phone, ...(l.phone_extra ? String(l.phone_extra).split(',') : [])];
+        return all.some(p => phoneType(p) === 'mobile');
+      }
+      return true;
+    }
+    case 'date': {
+      if (!filters.date) return true;
+      if (!l.posted) return false;
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - filters.date);
+      return new Date(l.posted) >= cutoff;
+    }
+    default: return true;
+  }
+}
+
+const ALL_FILTER_KEYS = ['search','position','city','rubric','status','has','date'];
+
+// Возвращает лиды, соответствующие ВСЕМ фильтрам кроме `skip`
+function leadsExcluding(skip) {
+  const keys = ALL_FILTER_KEYS.filter(k => k !== skip);
+  return allLeads.filter(l => keys.every(k => matchesFilter(l, k)));
+}
+
 function updateCityFilter() {
   const select = document.getElementById('filterCity');
   const current = select.value;
-  const cities = [...new Set(allLeads.map(l => l.city).filter(c => c && c !== '—'))].sort();
-  select.innerHTML = '<option value="">Все города</option>' +
-    cities.map(c => `<option value="${esc(c)}" ${c === current ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  // Города — из выборки без учёта фильтра города
+  const pool = leadsExcludingCached('city');
+  const cities = [...new Set(pool.map(l => l.city).filter(c => c && c !== '—'))].sort();
+  // Если текущий город исчез — сбрасываем
+  if (current && !cities.includes(current)) filters.city = '';
+  const val = cities.includes(current) ? current : '';
+  select.innerHTML = `<option value="">Все города${cities.length ? ' (' + cities.length + ')' : ''}</option>` +
+    cities.map(c => `<option value="${esc(c)}" ${c === val ? 'selected' : ''}>${esc(c)}</option>`).join('');
 }
 function updateRubricFilter() {
   const select = document.getElementById('filterRubric');
   const current = select.value;
-  const rubrics = [...new Set(allLeads.map(l => l.rubric).filter(Boolean))].sort();
+  const pool = leadsExcludingCached('rubric');
+  const rubrics = [...new Set(pool.map(l => l.rubric).filter(Boolean))].sort();
   if (rubrics.length === 0) {
     select.innerHTML = '<option value="">Рубрики (нет данных)</option>';
-    select.disabled = true;
-    return;
+    select.disabled = true; return;
   }
+  if (current && !rubrics.includes(current)) filters.rubric = '';
+  const val = rubrics.includes(current) ? current : '';
   select.disabled = false;
-  select.innerHTML = '<option value="">Все рубрики</option>' +
-    rubrics.map(r => `<option value="${esc(r)}" ${r === current ? 'selected' : ''}>${esc(r)}</option>`).join('');
+  select.innerHTML = `<option value="">Все рубрики${rubrics.length ? ' (' + rubrics.length + ')' : ''}</option>` +
+    rubrics.map(r => `<option value="${esc(r)}" ${r === val ? 'selected' : ''}>${esc(r)}</option>`).join('');
+}
+function updateStatusFilter() {
+  const select = document.getElementById('filterStatus');
+  const current = select.value;
+  const pool = leadsExcludingCached('status');
+  const STATUS = [
+    { value: 'new',         label: 'Новые' },
+    { value: 'in_progress', label: 'В работе' },
+    { value: 'contacted',   label: 'Связались' },
+    { value: 'skip',        label: 'Пропустить' },
+  ];
+  const counts = {};
+  for (const l of pool) counts[l.status || 'new'] = (counts[l.status || 'new'] || 0) + 1;
+  if (current && !counts[current]) filters.status = '';
+  const val = counts[current] ? current : '';
+  let html = `<option value="">Все статусы (${pool.length})</option>`;
+  for (const s of STATUS) {
+    const cnt = counts[s.value] || 0;
+    if (cnt === 0) continue;
+    html += `<option value="${s.value}" ${s.value === val ? 'selected' : ''}>${s.label} (${cnt})</option>`;
+  }
+  select.innerHTML = html;
 }
 function updatePositionFilter() {
   const select = document.getElementById('filterPosition');
   const current = select.value;
-  const counts = { rop: 0, hr: 0, other: 0 };
-  for (const l of allLeads) {
-    const k = l.position_type || 'other';
-    if (k in counts) counts[k]++;
-  }
-  const options = [
-    { v: '',      label: `Все позиции (${allLeads.length})` },
-    { v: 'rop',   label: `${POSITION_LABELS.rop} (${counts.rop})` },
-    { v: 'hr',    label: `${POSITION_LABELS.hr} (${counts.hr})` },
-    { v: 'other', label: `${POSITION_LABELS.other} (${counts.other})` },
+  const pool = leadsExcludingCached('position');
+  const counts = {};
+  for (const l of pool) counts[l.category || 'other'] = (counts[l.category || 'other'] || 0) + 1;
+  if (current && !counts[current]) filters.position = '';
+  const val = counts[current] ? current : '';
+  const CATS = [
+    { value: 'fitness', label: '🎯 Фитнес' },
+    { value: 'clinic',  label: '🎯 Клиники' },
+    { value: 'edu',     label: '🎯 Образование' },
+    { value: 'beauty',  label: '🎯 Бьюти' },
+    { value: 'sales',   label: '💼 Руководители продаж' },
+    { value: 'signal',  label: '📊 Сигналы роста' },
+    { value: 'other',   label: 'Другое' },
   ];
-  select.innerHTML = options.map(o => `<option value="${o.v}" ${o.v === current ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
+  let html = `<option value="">Все категории (${pool.length})</option>`;
+  for (const c of CATS) {
+    const cnt = counts[c.value] || 0;
+    if (cnt === 0) continue;
+    html += `<option value="${c.value}" ${c.value === val ? 'selected' : ''}>${c.label} (${cnt})</option>`;
+  }
+  select.innerHTML = html;
 }
 function updateStats() {
   if (serverStats) {
@@ -1426,13 +2122,17 @@ function setLastUpdate() {
   document.getElementById('lastUpdate').textContent = 'обновлено ' + t;
 }
 function resetFilters() {
-  filters = { search:'', position:'', city:'', rubric:'', status:'', has:'' };
+  filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:0 };
   document.getElementById('searchInput').value = '';
   document.getElementById('filterPosition').value = '';
   document.getElementById('filterCity').value = '';
   document.getElementById('filterRubric').value = '';
   document.getElementById('filterStatus').value = '';
-  document.getElementById('filterHasPhone').value = '';
+  document.querySelectorAll('.cpill').forEach(b => b.classList.remove('cpill-active'));
+  document.querySelectorAll('.dpill').forEach(b => b.classList.remove('dpill-active'));
+  const allTimeBtn = document.querySelector('.dpill[data-days="0"]');
+  if (allTimeBtn) allTimeBtn.classList.add('dpill-active');
+  filters.date = 0;
   render();
 }
 
@@ -1441,12 +2141,25 @@ function resetFilters() {
    ========================================================================= */
 document.getElementById('searchInput').addEventListener('input', debounce(e => {
   filters.search = e.target.value; render();
-}, 200));
+}, 300));
 document.getElementById('filterPosition').addEventListener('change', e => { filters.position = e.target.value; render(); });
 document.getElementById('filterCity').addEventListener('change', e => { filters.city = e.target.value; render(); });
 document.getElementById('filterRubric').addEventListener('change', e => { filters.rubric = e.target.value; render(); });
 document.getElementById('filterStatus').addEventListener('change', e => { filters.status = e.target.value; render(); });
-document.getElementById('filterHasPhone').addEventListener('change', e => { filters.has = e.target.value; render(); });
+function toggleContactPill(el) {
+  const val = el.dataset.val;
+  const isActive = el.classList.contains('cpill-active');
+  document.querySelectorAll('.cpill').forEach(b => b.classList.remove('cpill-active'));
+  if (!isActive) el.classList.add('cpill-active');
+  filters.has = isActive ? '' : val;
+  render();
+}
+function toggleDatePill(el) {
+  document.querySelectorAll('.dpill').forEach(b => b.classList.remove('dpill-active'));
+  el.classList.add('dpill-active');
+  filters.date = parseInt(el.dataset.days) || 0;
+  render();
+}
 
 document.querySelectorAll('th.sortable').forEach(th => {
   th.addEventListener('click', () => {
@@ -1469,6 +2182,7 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape') {
     if (document.getElementById('settingsModal').classList.contains('open')) closeModal();
+    else if (document.getElementById('parserModal').classList.contains('open')) closeParserModal();
     else if (document.getElementById('drawer').classList.contains('open')) closeDrawer();
     else if (selectedIds.size > 0) clearSelection();
   }
