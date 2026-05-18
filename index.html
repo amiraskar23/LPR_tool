@@ -738,9 +738,7 @@
   <div class="filters-row1">
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="search" id="searchInput" placeholder="Поиск по компании, вакансии, ФИО, БИН..."
-             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-             enterkeyhint="search" inputmode="search">
+      <input type="text" id="searchInput" placeholder="Поиск по компании, вакансии, ФИО, БИН...">
       <span class="kbd">⌘K</span>
     </div>
     <div class="filters-dropdowns">
@@ -1560,10 +1558,12 @@ function showLoadingSkeleton() {
 }
 // Виртуальный список: рендерим порциями
 const PAGE_SIZE = 100;
-let _renderGeneration = 0;  // отменяем устаревшие рендеры
+let _renderGeneration = 0;     // отменяем устаревшие рендеры (dropdown'ы, статы)
+let _tailGeneration   = 0;     // отдельно отменяем фоновый дорендер строк (можно прервать при фокусе пользователя)
 
 function render() {
   const gen = ++_renderGeneration;
+  const tailGen = ++_tailGeneration;
   const filtered = applySort(applyFilters(allLeads));
   const tbody = document.getElementById('leadsBody');
   const empty = document.getElementById('emptyState');
@@ -1578,7 +1578,7 @@ function render() {
     tbody.innerHTML = visible.map(rowHtml).join('');
     // Остальные строки добрендериваем асинхронно чтобы не блокировать UI
     if (filtered.length > PAGE_SIZE) {
-      renderRemainingRows(filtered, PAGE_SIZE, gen, tbody);
+      renderRemainingRows(filtered, PAGE_SIZE, tailGen, tbody);
     }
   }
 
@@ -1599,22 +1599,33 @@ function render() {
 }
 
 function renderRemainingRows(filtered, startIdx, gen, tbody) {
-  // Рендерим по CHUNK строк за раз, уступая браузеру между чанками
-  const CHUNK = 100;
+  // Рендерим по CHUNK строк, уступая main thread для user input.
+  // requestIdleCallback откладывает работу до момента, когда браузер свободен,
+  // и автоматически уступает место кликам/фокусу/набору текста — это и решает
+  // проблему "первый клик на поиск висит 6-7 сек, пока дорендериваются строки".
+  const CHUNK = 200;
   let idx = startIdx;
-  function renderChunk() {
-    if (gen !== _renderGeneration) return; // рендер устарел — стоп
+
+  const schedule = (cb) => {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(cb, { timeout: 200 });
+    } else {
+      setTimeout(cb, 0);
+    }
+  };
+
+  function renderChunk(deadline) {
+    if (gen !== _tailGeneration) return; // рендер устарел — стоп
     const chunk = filtered.slice(idx, idx + CHUNK);
     if (chunk.length === 0) return;
     const html = chunk.map(rowHtml).join('');
     tbody.insertAdjacentHTML('beforeend', html);
     idx += CHUNK;
     if (idx < filtered.length) {
-      // Следующий чанк — через setTimeout(0) чтобы браузер мог обработать события
-      setTimeout(renderChunk, 0);
+      schedule(renderChunk);
     }
   }
-  setTimeout(renderChunk, 0);
+  schedule(renderChunk);
 }
 function rowHtml(l) {
   const sid = String(l.id);
@@ -2139,6 +2150,18 @@ function resetFilters() {
 /* =========================================================================
    EVENT LISTENERS
    ========================================================================= */
+// При первом фокусе/клике на поиск или фильтры — отменяем фоновый дорендер
+// хвоста таблицы, чтобы main thread мгновенно освободился под ввод.
+// Хвостовые строки добавятся после применения фильтра следующим render().
+// Бампаем только tail-generation — dropdown'ы и стата НЕ отменяются.
+function _yieldRenderToInput() {
+  _tailGeneration++;
+}
+['searchInput','filterPosition','filterCity','filterRubric','filterStatus'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('focus', _yieldRenderToInput, { passive: true });
+});
+
 document.getElementById('searchInput').addEventListener('input', debounce(e => {
   filters.search = e.target.value; render();
 }, 300));
