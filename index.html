@@ -291,6 +291,9 @@
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); overflow: hidden;
     box-shadow: var(--shadow-xs);
+    /* Safari: изолируем layout таблицы от остальной страницы — фокус на поиск
+       больше не триггерит relayout 100+ строк */
+    contain: layout paint style;
   }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   thead { background: var(--surface-2); position: sticky; top: 0; z-index: 5; }
@@ -314,7 +317,7 @@
   }
   td.check-cell { width: 44px; }
   tr:last-child td { border-bottom: none; }
-  tbody tr { cursor: pointer; transition: background 0.12s; will-change: background-color; }
+  tbody tr { cursor: pointer; }
   tbody tr:hover td { background: #faf9f7; }
   tbody tr:hover .cell { color: var(--text); }
   tbody tr.selected td { background: var(--accent-light); }
@@ -419,10 +422,15 @@
   /* ─── Modal ────────────────────────────────────────────────────────────── */
   .modal-overlay {
     display: none; position: fixed; inset: 0; z-index: 100;
-    background: rgba(28,26,23,0.4); backdrop-filter: blur(6px);
+    background: rgba(28,26,23,0.4);
     align-items: center; justify-content: center;
   }
-  .modal-overlay.open { display: flex; }
+  /* backdrop-filter только когда открыто — Safari не жрёт GPU на скрытых элементах */
+  .modal-overlay.open {
+    display: flex;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
   .modal {
     background: var(--surface); border-radius: 16px;
     padding: 28px; width: 92vw; max-width: 480px;
@@ -534,9 +542,13 @@
   /* ─── Drawer ───────────────────────────────────────────────────────────── */
   .drawer-overlay {
     display: none; position: fixed; inset: 0; z-index: 50;
-    background: rgba(28,26,23,0.28); backdrop-filter: blur(4px);
+    background: rgba(28,26,23,0.28);
   }
-  .drawer-overlay.open { display: block; }
+  .drawer-overlay.open {
+    display: block;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
   .drawer {
     position: fixed; top: 0; right: 0; bottom: 0; z-index: 51;
     width: 460px; background: var(--bg);
@@ -758,9 +770,9 @@
     <button class="cpill" data-val="no_lpr"      onclick="toggleContactPill(this)">Без ЛПР</button>
     <button class="cpill" data-val="no_contacts" onclick="toggleContactPill(this)">Без контактов</button>
     <span class="filters-sep"></span>
-    <button class="dpill dpill-active" data-days="0"  onclick="toggleDatePill(this)">За всё время</button>
+    <button class="dpill" data-days="0"  onclick="toggleDatePill(this)">За всё время</button>
     <button class="dpill" data-days="1"  onclick="toggleDatePill(this)">Сегодня</button>
-    <button class="dpill" data-days="7"  onclick="toggleDatePill(this)">Неделя</button>
+    <button class="dpill dpill-active" data-days="7"  onclick="toggleDatePill(this)">Неделя</button>
     <button class="dpill" data-days="90" onclick="toggleDatePill(this)">3 месяца</button>
     <button class="reset-filters-btn" id="resetFiltersBtn" onclick="resetFilters()" title="Сбросить все фильтры">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -940,7 +952,7 @@ const STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', conta
 let config = loadConfig();
 let allLeads = [];
 let serverStats = null;
-let filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:0 };
+let filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:7 };
 let selectedIds = new Set();
 let sortState = { column: 'posted', direction: 'desc' };
 let openLeadId = null;
@@ -1600,21 +1612,35 @@ function render() {
 
 function renderRemainingRows(filtered, startIdx, gen, tbody) {
   // Рендерим по CHUNK строк, уступая main thread для user input.
-  // requestIdleCallback откладывает работу до момента, когда браузер свободен,
-  // и автоматически уступает место кликам/фокусу/набору текста — это и решает
-  // проблему "первый клик на поиск висит 6-7 сек, пока дорендериваются строки".
+  // ВАЖНО: Safari не поддерживает requestIdleCallback. Раньше падали в
+  // setTimeout(0), но это НЕ уступает место focus/click — событие застревает
+  // в очереди за уже запланированными setTimeout-ами. MessageChannel порождает
+  // макротаск с более низким приоритетом, чем user input, и Safari реально
+  // отдаёт ему место для обработки клика.
   const CHUNK = 200;
   let idx = startIdx;
+
+  const _mc = (typeof MessageChannel !== 'undefined') ? new MessageChannel() : null;
+  const _pending = [];
+  if (_mc) {
+    _mc.port1.onmessage = () => {
+      const cb = _pending.shift();
+      if (cb) cb();
+    };
+  }
 
   const schedule = (cb) => {
     if (typeof requestIdleCallback === 'function') {
       requestIdleCallback(cb, { timeout: 200 });
+    } else if (_mc) {
+      _pending.push(cb);
+      _mc.port2.postMessage(0);
     } else {
       setTimeout(cb, 0);
     }
   };
 
-  function renderChunk(deadline) {
+  function renderChunk() {
     if (gen !== _tailGeneration) return; // рендер устарел — стоп
     const chunk = filtered.slice(idx, idx + CHUNK);
     if (chunk.length === 0) return;
@@ -1959,6 +1985,7 @@ async function quickStatus(id, status) {
 // Кеш leadsExcluding — пересчитываем только при смене фильтров
 let _excludingCache = {};
 let _excludingFiltersSnapshot = '';
+let _excludingLeadsCount = -1; // отслеживаем изменение allLeads
 
 function _getExcludingCacheKey() {
   return JSON.stringify({ s: filters.search, p: filters.position, c: filters.city,
@@ -1967,9 +1994,11 @@ function _getExcludingCacheKey() {
 
 function leadsExcludingCached(skip) {
   const snap = _getExcludingCacheKey();
-  if (snap !== _excludingFiltersSnapshot) {
+  // Сбрасываем кеш если изменились фильтры ИЛИ обновился массив лидов
+  if (snap !== _excludingFiltersSnapshot || _excludingLeadsCount !== allLeads.length) {
     _excludingCache = {};
     _excludingFiltersSnapshot = snap;
+    _excludingLeadsCount = allLeads.length;
   }
   if (!_excludingCache[skip]) {
     _excludingCache[skip] = leadsExcluding(skip);
@@ -2133,7 +2162,7 @@ function setLastUpdate() {
   document.getElementById('lastUpdate').textContent = 'обновлено ' + t;
 }
 function resetFilters() {
-  filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:0 };
+  filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:7 };
   document.getElementById('searchInput').value = '';
   document.getElementById('filterPosition').value = '';
   document.getElementById('filterCity').value = '';
@@ -2141,26 +2170,75 @@ function resetFilters() {
   document.getElementById('filterStatus').value = '';
   document.querySelectorAll('.cpill').forEach(b => b.classList.remove('cpill-active'));
   document.querySelectorAll('.dpill').forEach(b => b.classList.remove('dpill-active'));
-  const allTimeBtn = document.querySelector('.dpill[data-days="0"]');
-  if (allTimeBtn) allTimeBtn.classList.add('dpill-active');
-  filters.date = 0;
+  const weekBtn = document.querySelector('.dpill[data-days="7"]');
+  if (weekBtn) weekBtn.classList.add('dpill-active');
+  filters.date = 7;
   render();
 }
 
 /* =========================================================================
    EVENT LISTENERS
    ========================================================================= */
-// При первом фокусе/клике на поиск или фильтры — отменяем фоновый дорендер
-// хвоста таблицы, чтобы main thread мгновенно освободился под ввод.
-// Хвостовые строки добавятся после применения фильтра следующим render().
-// Бампаем только tail-generation — dropdown'ы и стата НЕ отменяются.
+// При первом контакте с фильтрами — отменяем фоновый дорендер хвоста таблицы,
+// чтобы main thread мгновенно освободился под ввод. Хвостовые строки добавятся
+// после применения фильтра следующим render(). Бампаем только tail-generation.
+//
+// ВАЖНО: вешаем на pointerdown/touchstart (они срабатывают РАНЬШЕ focus event,
+// поэтому отмена доходит до Safari до того, как он попытается прокрутить ещё
+// один chunk рендера). Capture-phase + document — ловим любой клик в области
+// фильтров без необходимости вешать на каждый элемент.
 function _yieldRenderToInput() {
   _tailGeneration++;
 }
+
+/* ─── ДИАГНОСТИКА фриза при первом клике ─────────────────────────────────
+   Включается автоматически. Открой DevTools → Console и кликни на поле
+   поиска. Увидишь точную последовательность событий и сколько мс прошло
+   между каждым шагом. Если есть «дыра» > 100мс — это и есть фриз. */
+let _firstInteractionLogged = false;
+function _diag(label) {
+  if (_firstInteractionLogged && label !== 'pointerdown') return;
+  if (label === 'pointerdown') _firstInteractionLogged = true;
+  // performance.now() для микросекундной точности
+  console.log(`[DIAG] ${performance.now().toFixed(1)}ms — ${label}`);
+}
+// Точки замера: pointerdown → pointerup → focus → input получил значение → render → done
+document.addEventListener('pointerdown', e => {
+  if (e.target.closest('.filters-row1, .filters-row2, header')) {
+    _diag('pointerdown');
+    _yieldRenderToInput();
+  }
+}, { passive: true, capture: true });
+document.addEventListener('pointerup', e => {
+  if (_firstInteractionLogged && e.target.closest('.filters-row1, .filters-row2, header')) {
+    _diag('pointerup');
+  }
+}, { passive: true, capture: true });
+document.addEventListener('touchstart', e => {
+  if (e.target.closest('.filters-row1, .filters-row2, header')) {
+    _diag('touchstart');
+    _yieldRenderToInput();
+  }
+}, { passive: true, capture: true });
+// Фолбэк на focus — на случай если pointer-события не сработали (клавиатура, Tab)
 ['searchInput','filterPosition','filterCity','filterRubric','filterStatus'].forEach(id => {
   const el = document.getElementById(id);
-  if (el) el.addEventListener('focus', _yieldRenderToInput, { passive: true });
+  if (el) el.addEventListener('focus', () => { _diag(`focus:${id}`); _yieldRenderToInput(); }, { passive: true });
 });
+
+// Засекаем долгие задачи (>50мс) — это и есть «фриз». Покажет, где Safari
+// застрял на main thread.
+if (typeof PerformanceObserver !== 'undefined') {
+  try {
+    const obs = new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) {
+        console.warn(`[DIAG long-task] ${entry.duration.toFixed(0)}ms at ${entry.startTime.toFixed(0)}ms`,
+          entry.attribution || '');
+      }
+    });
+    obs.observe({ type: 'longtask', buffered: true });
+  } catch (e) { /* Safari может не поддерживать longtask */ }
+}
 
 document.getElementById('searchInput').addEventListener('input', debounce(e => {
   filters.search = e.target.value; render();
