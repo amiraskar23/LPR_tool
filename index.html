@@ -169,6 +169,7 @@
   .stat-value {
     font-family: 'Unbounded', sans-serif;
     font-size: 24px; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
   }
   .stat-card.highlight .stat-value { color: var(--accent); }
 
@@ -291,12 +292,9 @@
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); overflow: hidden;
     box-shadow: var(--shadow-xs);
-    /* Safari: изолируем layout таблицы от остальной страницы — фокус на поиск
-       больше не триггерит relayout 100+ строк */
-    contain: layout paint style;
   }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  thead { background: var(--surface-2); position: sticky; top: 0; z-index: 5; }
+  thead { background: var(--surface-2); }
   th {
     padding: 10px 16px; text-align: left;
     font-size: 10.5px; font-weight: 700; color: var(--text-muted);
@@ -318,10 +316,9 @@
   td.check-cell { width: 44px; }
   tr:last-child td { border-bottom: none; }
   tbody tr { cursor: pointer; }
-  tbody tr:hover td { background: #faf9f7; }
-  tbody tr:hover .cell { color: var(--text); }
-  tbody tr.selected td { background: var(--accent-light); }
-  tbody tr.opened td { background: var(--accent-light); }
+  tbody tr:hover { background: #faf9f7; }
+  tbody tr.selected { background: var(--accent-light); }
+  tbody tr.opened   { background: var(--accent-light); }
 
   /* Универсальная обёртка — задаёт отступ и выравнивает содержимое */
   .cell { padding: 12px 16px; }
@@ -418,6 +415,16 @@
   .skeleton-line.short { width: 55%; }
   .skeleton-line.xshort { width: 32%; }
   @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* Утилитарные классы — заменяют inline стили в rowHtml (быстрее парсится в Safari) */
+  .check-cell-inner { display: flex; align-items: center; justify-content: center; padding: 0 0 0 14px; min-height: 54px; }
+  .cell-city    { color: var(--text-mid); font-size: 13px; }
+  .cell-posted  { color: var(--text-muted); font-size: 12px; }
+  .cell-status  { padding-right: 12px; }
+  .website-link { color: var(--text-mid); text-decoration: none; }
+  .website-link:hover { color: var(--accent); }
+  .dash         { color: var(--text-muted); }
+  .director-row-empty { color: var(--text-muted); font-size: 12.5px; }
 
   /* ─── Modal ────────────────────────────────────────────────────────────── */
   .modal-overlay {
@@ -1540,13 +1547,15 @@ document.getElementById('refreshBtn').addEventListener('click', triggerRefresh);
    ФИЛЬТРАЦИЯ / СОРТИРОВКА / РЕНДЕР
    ========================================================================= */
 function applyFilters(leads) {
-  return leads.filter(l => ALL_FILTER_KEYS.every(k => matchesFilter(l, k)));
+  const pred = makeFastPredicate(null);
+  return leads.filter(pred);
 }
 function applySort(leads) {
   const fn = SORT_OPTIONS[sortState.column];
   if (!fn) return leads;
   const dir = sortState.direction === 'asc' ? 1 : -1;
-  return [...leads].sort((a, b) => {
+  // applyFilters уже вернул новый массив через filter(), сортируем in-place
+  return leads.sort((a, b) => {
     const va = fn(a), vb = fn(b);
     if (va < vb) return -1 * dir;
     if (va > vb) return  1 * dir;
@@ -1568,90 +1577,113 @@ function showLoadingSkeleton() {
     </tr>`).join('');
   document.getElementById('emptyState').style.display = 'none';
 }
-// Виртуальный список: рендерим порциями
+// Виртуальный список: рендерим первые PAGE_SIZE синхронно, остальные —
+// только когда пользователь доскроллил к нижней границе таблицы.
+// Это снимает фриз Safari: пока юзер не скроллит, главный поток свободен.
 const PAGE_SIZE = 100;
 let _renderGeneration = 0;     // отменяем устаревшие рендеры (dropdown'ы, статы)
-let _tailGeneration   = 0;     // отдельно отменяем фоновый дорендер строк (можно прервать при фокусе пользователя)
+let _pendingTail = null;       // { filtered, startIdx, gen } — отложенный хвост
+
+// Sentinel для ленивого дорендера через IntersectionObserver
+let _tailObserver = null;
+function _ensureTailObserver() {
+  if (_tailObserver) return _tailObserver;
+  _tailObserver = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) _renderTailChunk();
+    }
+  }, {
+    // Стартуем рендер заранее — когда до сентинела осталось 800px
+    rootMargin: '800px 0px 800px 0px',
+    threshold: 0
+  });
+  return _tailObserver;
+}
+function _getOrCreateSentinel(tbody) {
+  let s = document.getElementById('tailSentinel');
+  if (!s) {
+    s = document.createElement('tr');
+    s.id = 'tailSentinel';
+    s.innerHTML = '<td colspan="8" style="height:1px;padding:0;border:0;"></td>';
+  }
+  return s;
+}
+function _renderTailChunk() {
+  if (!_pendingTail) return;
+  const { filtered, gen } = _pendingTail;
+  if (gen !== _renderGeneration) { _pendingTail = null; return; }
+  const tbody = document.getElementById('leadsBody');
+  const sentinel = document.getElementById('tailSentinel');
+  const CHUNK = 100;
+  const end = Math.min(_pendingTail.startIdx + CHUNK, filtered.length);
+  let html = '';
+  for (let i = _pendingTail.startIdx; i < end; i++) html += rowHtml(filtered[i]);
+  // Вставляем перед sentinel чтобы он остался в конце
+  if (sentinel && sentinel.parentNode === tbody) {
+    sentinel.insertAdjacentHTML('beforebegin', html);
+  } else {
+    tbody.insertAdjacentHTML('beforeend', html);
+  }
+  _pendingTail.startIdx = end;
+  if (end >= filtered.length) {
+    // Всё дорендерилось — снимаем наблюдение
+    if (_tailObserver && sentinel) _tailObserver.unobserve(sentinel);
+    if (sentinel && sentinel.parentNode) sentinel.parentNode.removeChild(sentinel);
+    _pendingTail = null;
+  }
+}
 
 function render() {
   const gen = ++_renderGeneration;
-  const tailGen = ++_tailGeneration;
+  _pendingTail = null;
   const filtered = applySort(applyFilters(allLeads));
   const tbody = document.getElementById('leadsBody');
   const empty = document.getElementById('emptyState');
+
+  // Отключаем старого sentinel (если был)
+  const oldSentinel = document.getElementById('tailSentinel');
+  if (oldSentinel) {
+    if (_tailObserver) _tailObserver.unobserve(oldSentinel);
+    oldSentinel.remove();
+  }
 
   if (filtered.length === 0) {
     tbody.innerHTML = '';
     empty.style.display = 'block';
   } else {
     empty.style.display = 'none';
-    // Строим HTML первых PAGE_SIZE строк синхронно — это мгновенно
+    // Первые PAGE_SIZE строк — синхронно (мгновенно видны)
     const visible = filtered.slice(0, PAGE_SIZE);
-    tbody.innerHTML = visible.map(rowHtml).join('');
-    // Остальные строки добрендериваем асинхронно чтобы не блокировать UI
+    let html = '';
+    for (let i = 0; i < visible.length; i++) html += rowHtml(visible[i]);
+    tbody.innerHTML = html;
+    // Остаток рендерим ТОЛЬКО когда пользователь доскроллит — не блокируем
+    // main thread фоновой работой. Это и есть ключевой фикс Safari-фриза.
     if (filtered.length > PAGE_SIZE) {
-      renderRemainingRows(filtered, PAGE_SIZE, tailGen, tbody);
+      _pendingTail = { filtered, startIdx: PAGE_SIZE, gen };
+      const sentinel = _getOrCreateSentinel(tbody);
+      tbody.appendChild(sentinel);
+      _ensureTailObserver().observe(sentinel);
     }
   }
 
-  // Обновляем dropdown'ы и стату через rAF — не блокируют первый кадр
+  // Стата и dropdown'ы — асинхронно. Бросаем работу, если пользователь
+  // успел ещё раз что-то изменить (gen устарел).
   requestAnimationFrame(() => {
-    if (gen !== _renderGeneration) return; // устарело
+    if (gen !== _renderGeneration) return;
     updateStats();
     updateSortIndicators();
-    // dropdown'ы — ещё один кадр позже (они самые тяжёлые)
     requestAnimationFrame(() => {
       if (gen !== _renderGeneration) return;
       updateCityFilter();
+      if (gen !== _renderGeneration) return;
       updatePositionFilter();
+      if (gen !== _renderGeneration) return;
       updateRubricFilter();
+      if (gen !== _renderGeneration) return;
       updateStatusFilter();
     });
   });
-}
-
-function renderRemainingRows(filtered, startIdx, gen, tbody) {
-  // Рендерим по CHUNK строк, уступая main thread для user input.
-  // ВАЖНО: Safari не поддерживает requestIdleCallback. Раньше падали в
-  // setTimeout(0), но это НЕ уступает место focus/click — событие застревает
-  // в очереди за уже запланированными setTimeout-ами. MessageChannel порождает
-  // макротаск с более низким приоритетом, чем user input, и Safari реально
-  // отдаёт ему место для обработки клика.
-  const CHUNK = 200;
-  let idx = startIdx;
-
-  const _mc = (typeof MessageChannel !== 'undefined') ? new MessageChannel() : null;
-  const _pending = [];
-  if (_mc) {
-    _mc.port1.onmessage = () => {
-      const cb = _pending.shift();
-      if (cb) cb();
-    };
-  }
-
-  const schedule = (cb) => {
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(cb, { timeout: 200 });
-    } else if (_mc) {
-      _pending.push(cb);
-      _mc.port2.postMessage(0);
-    } else {
-      setTimeout(cb, 0);
-    }
-  };
-
-  function renderChunk() {
-    if (gen !== _tailGeneration) return; // рендер устарел — стоп
-    const chunk = filtered.slice(idx, idx + CHUNK);
-    if (chunk.length === 0) return;
-    const html = chunk.map(rowHtml).join('');
-    tbody.insertAdjacentHTML('beforeend', html);
-    idx += CHUNK;
-    if (idx < filtered.length) {
-      schedule(renderChunk);
-    }
-  }
-  schedule(renderChunk);
 }
 function rowHtml(l) {
   const sid = String(l.id);
@@ -1660,59 +1692,57 @@ function rowHtml(l) {
   const catMeta = l.category && CATEGORY_META[l.category];
   const catBadge = catMeta && l.category !== 'other'
     ? `<span class="category-badge tier-${catMeta.tier}">${esc(catMeta.label.toLowerCase())}</span>` : '';
-
-  const hasNote = !!(l.notes && l.notes.trim());
+  const hasNote = !!(l.notes && String(l.notes).trim());
 
   const classes = [
     isSelected ? 'selected' : '',
     isOpen     ? 'opened'   : '',
   ].filter(Boolean).join(' ');
 
+  // Все обработчики делегированы на #leadsBody (см. setupTableDelegation).
+  // Это снимает огромный per-row overhead Safari на парсинг inline JS.
+  const sidEsc = esc(sid);
   return `
-    <tr class="${classes}" data-id="${esc(sid)}" data-status="${esc(l.status || 'new')}">
+    <tr class="${classes}" data-id="${sidEsc}" data-status="${esc(l.status || 'new')}">
       <td class="check-cell">
-        <div class="cell" style="display:flex;align-items:center;justify-content:center;padding:0 0 0 14px;min-height:54px;">
-          <input type="checkbox" class="row-check" data-id="${esc(sid)}" ${isSelected ? 'checked' : ''}
-            onchange="toggleSelection('${esc(sid)}', this.checked); event.stopPropagation();"
-            onclick="event.stopPropagation()">
+        <div class="cell check-cell-inner">
+          <input type="checkbox" class="row-check" data-id="${sidEsc}" ${isSelected ? 'checked' : ''}>
         </div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')">
+      <td data-action="open">
         <div class="cell">
           <div class="company-name">${esc(l.company)}${catBadge}${hasNote ? '<span class="note-indicator" title="Есть заметка">💬</span>' : ''}</div>
           <div class="vacancy-title" title="${esc(l.vacancy || '')}">${esc(l.vacancy || '')}</div>
           ${l.rubric ? `<span class="rubric-tag" title="${esc(l.rubric)}">${esc(l.rubric)}</span>` : ''}
         </div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')">
-        <div class="cell" style="color:var(--text-mid);font-size:13px;">${esc(l.city || '—')}</div>
+      <td data-action="open">
+        <div class="cell cell-city">${esc(l.city || '—')}</div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')">
+      <td data-action="open">
         <div class="cell">
-          ${l.phone   ? `<div class="contact-row"><span class="icon">☏</span><span class="copyable mono" onclick="copyToClipboard('${esc(l.phone)}'); event.stopPropagation();">${esc(l.phone)}</span>${waIconHtml(l.phone)}</div>` : ''}
-          ${l.email   ? `<div class="contact-row"><span class="icon">@</span><span class="copyable" onclick="copyToClipboard('${esc(l.email)}'); event.stopPropagation();">${esc(l.email)}</span></div>` : ''}
-          ${l.website ? `<div class="contact-row"><span class="icon">↗</span><a href="${esc(normUrl(l.website))}" target="_blank" onclick="event.stopPropagation()" style="color:var(--text-mid);text-decoration:none;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-mid)'">${esc(l.website)}</a></div>` : ''}
-          ${(!l.phone && !l.email && !l.website) ? '<span style="color:var(--text-muted)">—</span>' : ''}
+          ${l.phone   ? `<div class="contact-row"><span class="icon">☏</span><span class="copyable mono" data-copy="${esc(l.phone)}">${esc(l.phone)}</span>${waIconHtml(l.phone)}</div>` : ''}
+          ${l.email   ? `<div class="contact-row"><span class="icon">@</span><span class="copyable" data-copy="${esc(l.email)}">${esc(l.email)}</span></div>` : ''}
+          ${l.website ? `<div class="contact-row"><span class="icon">↗</span><a href="${esc(normUrl(l.website))}" target="_blank" class="website-link" data-stop="1">${esc(l.website)}</a></div>` : ''}
+          ${(!l.phone && !l.email && !l.website) ? '<span class="dash">—</span>' : ''}
         </div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')">
+      <td data-action="open">
         <div class="cell">
           ${l.director
-            ? `<div class="director-row copyable" onclick="copyToClipboard('${esc(l.director)}'); event.stopPropagation();" title="Скопировать ФИО">${esc(l.director)}</div>${l.director_position ? `<div class="director-pos">${esc(l.director_position)}</div>` : ''}${l.bin ? `<div class="director-bin" onclick="copyToClipboard('${esc(l.bin)}'); event.stopPropagation();" title="Скопировать БИН">БИН ${esc(l.bin)}</div>` : ''}`
-            : '<span style="color:var(--text-muted);font-size:12.5px;">—</span>'}
+            ? `<div class="director-row copyable" data-copy="${esc(l.director)}" title="Скопировать ФИО">${esc(l.director)}</div>${l.director_position ? `<div class="director-pos">${esc(l.director_position)}</div>` : ''}${l.bin ? `<div class="director-bin" data-copy="${esc(l.bin)}" title="Скопировать БИН">БИН ${esc(l.bin)}</div>` : ''}`
+            : '<span class="dash">—</span>'}
         </div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')">
+      <td data-action="open">
         <div class="cell">${renderSources(l)}</div>
       </td>
-      <td onclick="openDrawer('${esc(sid)}')">
-        <div class="cell mono" style="color:var(--text-muted);font-size:12px;">${esc((l.posted || '').slice(5))}</div>
+      <td data-action="open">
+        <div class="cell cell-posted mono">${esc((l.posted || '').slice(5))}</div>
       </td>
       <td>
-        <div class="cell" style="padding-right:12px;">
-          <select class="status-select status-${l.status || 'new'}" data-id="${esc(sid)}"
-            onchange="onStatusChange(this); event.stopPropagation();"
-            onclick="event.stopPropagation()">
+        <div class="cell cell-status">
+          <select class="status-select status-${l.status || 'new'}" data-id="${sidEsc}" data-stop="1">
             <option value="new"         ${l.status === 'new'         ? 'selected' : ''}>Новый</option>
             <option value="in_progress" ${l.status === 'in_progress' ? 'selected' : ''}>В работе</option>
             <option value="contacted"   ${l.status === 'contacted'   ? 'selected' : ''}>Связались</option>
@@ -2007,6 +2037,8 @@ function leadsExcludingCached(skip) {
 }
 
 // Применяет один предикат фильтра (по ключу) к лиду
+// ВАЖНО: не используется напрямую в горячем цикле — там работает makeFastPredicate(),
+// который выносит дорогие вычисления (cutoff даты, toLowerCase) за пределы цикла.
 function matchesFilter(l, key) {
   switch (key) {
     case 'search': {
@@ -2044,12 +2076,62 @@ function matchesFilter(l, key) {
   }
 }
 
+// Создаёт быстрый комбинированный предикат для горячего цикла фильтрации.
+// Выносит за пределы цикла: toLowerCase поиска, cutoff даты, проверку «фильтр пустой».
+// Это в 5-10× быстрее, чем перебирать все ключи через matchesFilter для каждого лида.
+function makeFastPredicate(skip) {
+  const q = filters.search ? filters.search.toLowerCase().trim() : '';
+  const useSearch = !!q && skip !== 'search';
+  const pos    = skip !== 'position' ? filters.position : '';
+  const city   = skip !== 'city'     ? filters.city     : '';
+  const rubric = skip !== 'rubric'   ? filters.rubric   : '';
+  const status = skip !== 'status'   ? filters.status   : '';
+  const has    = skip !== 'has'      ? filters.has      : '';
+  const dateD  = skip !== 'date'     ? filters.date     : 0;
+
+  // cutoff в виде ISO YYYY-MM-DD — сравнение строк быстрее Date()
+  let cutoffStr = '';
+  if (dateD) {
+    const c = new Date(); c.setDate(c.getDate() - dateD);
+    cutoffStr = c.toISOString().slice(0, 10);
+  }
+
+  return function(l) {
+    if (pos    && l.category !== pos)    return false;
+    if (city   && l.city     !== city)   return false;
+    if (rubric && l.rubric   !== rubric) return false;
+    if (status && l.status   !== status) return false;
+    if (cutoffStr) {
+      if (!l.posted || l.posted < cutoffStr) return false;
+    }
+    if (has) {
+      if (has === 'phone'    && !l.phone)    return false;
+      else if (has === 'email'    && !l.email)    return false;
+      else if (has === 'director' && !l.director) return false;
+      else if (has === 'no_lpr'   && l.director)  return false;
+      else if (has === 'no_contacts' && (l.phone || l.email || l.website)) return false;
+      else if (has === 'whatsapp') {
+        const all = l.phone_extra
+          ? [l.phone, ...String(l.phone_extra).split(',')]
+          : [l.phone];
+        if (!all.some(p => phoneType(p) === 'mobile')) return false;
+      }
+    }
+    if (useSearch) {
+      const catLabel = CATEGORY_META[l.category]?.label || '';
+      const hay = (l.company + ' ' + l.vacancy + ' ' + (l.director||'') + ' '
+                 + (l.city||'') + ' ' + (l.bin||'') + ' ' + (l.rubric||'') + ' ' + catLabel).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  };
+}
+
 const ALL_FILTER_KEYS = ['search','position','city','rubric','status','has','date'];
 
 // Возвращает лиды, соответствующие ВСЕМ фильтрам кроме `skip`
 function leadsExcluding(skip) {
-  const keys = ALL_FILTER_KEYS.filter(k => k !== skip);
-  return allLeads.filter(l => keys.every(k => matchesFilter(l, k)));
+  return allLeads.filter(makeFastPredicate(skip));
 }
 
 function updateCityFilter() {
@@ -2136,14 +2218,23 @@ function updateStats() {
     document.getElementById('statWithDirector').textContent = serverStats.with_director ?? 0;
     return;
   }
+  // Один проход вместо пяти filter() — критично на больших данных
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0, 10);
-  document.getElementById('statToday').textContent        = allLeads.filter(l => l.posted === today).length;
-  document.getElementById('statWeek').textContent         = allLeads.filter(l => l.posted >= weekAgo).length;
-  document.getElementById('statInProgress').textContent   = allLeads.filter(l => l.status === 'in_progress').length;
+  let cToday=0, cWeek=0, cInProgress=0, cPhone=0, cDirector=0;
+  for (const l of allLeads) {
+    if (l.posted === today) cToday++;
+    if (l.posted >= weekAgo) cWeek++;
+    if (l.status === 'in_progress') cInProgress++;
+    if (l.phone) cPhone++;
+    if (l.director) cDirector++;
+  }
+  document.getElementById('statToday').textContent        = cToday;
+  document.getElementById('statWeek').textContent         = cWeek;
+  document.getElementById('statInProgress').textContent   = cInProgress;
   document.getElementById('statTotal').textContent        = allLeads.length;
-  document.getElementById('statWithPhone').textContent    = allLeads.filter(l => l.phone).length;
-  document.getElementById('statWithDirector').textContent = allLeads.filter(l => l.director).length;
+  document.getElementById('statWithPhone').textContent    = cPhone;
+  document.getElementById('statWithDirector').textContent = cDirector;
 }
 function updateSortIndicators() {
   document.querySelectorAll('th.sortable').forEach(th => {
@@ -2179,67 +2270,53 @@ function resetFilters() {
 /* =========================================================================
    EVENT LISTENERS
    ========================================================================= */
-// При первом контакте с фильтрами — отменяем фоновый дорендер хвоста таблицы,
-// чтобы main thread мгновенно освободился под ввод. Хвостовые строки добавятся
-// после применения фильтра следующим render(). Бампаем только tail-generation.
-//
-// ВАЖНО: вешаем на pointerdown/touchstart (они срабатывают РАНЬШЕ focus event,
-// поэтому отмена доходит до Safari до того, как он попытается прокрутить ещё
-// один chunk рендера). Capture-phase + document — ловим любой клик в области
-// фильтров без необходимости вешать на каждый элемент.
-function _yieldRenderToInput() {
-  _tailGeneration++;
-}
+// Хвостовой рендер теперь срабатывает только при скролле к концу таблицы
+// (через IntersectionObserver), поэтому отдельная отмена дорендера не нужна.
 
-/* ─── ДИАГНОСТИКА фриза при первом клике ─────────────────────────────────
-   Включается автоматически. Открой DevTools → Console и кликни на поле
-   поиска. Увидишь точную последовательность событий и сколько мс прошло
-   между каждым шагом. Если есть «дыра» > 100мс — это и есть фриз. */
-let _firstInteractionLogged = false;
-function _diag(label) {
-  if (_firstInteractionLogged && label !== 'pointerdown') return;
-  if (label === 'pointerdown') _firstInteractionLogged = true;
-  // performance.now() для микросекундной точности
-  console.log(`[DIAG] ${performance.now().toFixed(1)}ms — ${label}`);
-}
-// Точки замера: pointerdown → pointerup → focus → input получил значение → render → done
-document.addEventListener('pointerdown', e => {
-  if (e.target.closest('.filters-row1, .filters-row2, header')) {
-    _diag('pointerdown');
-    _yieldRenderToInput();
-  }
-}, { passive: true, capture: true });
-document.addEventListener('pointerup', e => {
-  if (_firstInteractionLogged && e.target.closest('.filters-row1, .filters-row2, header')) {
-    _diag('pointerup');
-  }
-}, { passive: true, capture: true });
-document.addEventListener('touchstart', e => {
-  if (e.target.closest('.filters-row1, .filters-row2, header')) {
-    _diag('touchstart');
-    _yieldRenderToInput();
-  }
-}, { passive: true, capture: true });
-// Фолбэк на focus — на случай если pointer-события не сработали (клавиатура, Tab)
-['searchInput','filterPosition','filterCity','filterRubric','filterStatus'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('focus', () => { _diag(`focus:${id}`); _yieldRenderToInput(); }, { passive: true });
-});
+/* ─── Делегирование событий таблицы ───────────────────────────────────────
+   Один listener на tbody вместо тысяч inline onclick/onchange в каждой
+   строке. Критично для Safari: парсинг inline JS-атрибутов в больших таблицах
+   тормозит первый клик. */
+function setupTableDelegation() {
+  const tbody = document.getElementById('leadsBody');
+  if (!tbody || tbody.dataset.delegated === '1') return;
+  tbody.dataset.delegated = '1';
 
-// Засекаем долгие задачи (>50мс) — это и есть «фриз». Покажет, где Safari
-// застрял на main thread.
-if (typeof PerformanceObserver !== 'undefined') {
-  try {
-    const obs = new PerformanceObserver(list => {
-      for (const entry of list.getEntries()) {
-        console.warn(`[DIAG long-task] ${entry.duration.toFixed(0)}ms at ${entry.startTime.toFixed(0)}ms`,
-          entry.attribution || '');
-      }
-    });
-    obs.observe({ type: 'longtask', buffered: true });
-  } catch (e) { /* Safari может не поддерживать longtask */ }
-}
+  // Клик: чекбокс, копирование, статус, открытие drawer
+  tbody.addEventListener('click', e => {
+    const target = e.target;
+    // Любой клик внутри элемента с data-stop — игнорируется (ссылки, селект)
+    if (target.closest('[data-stop]')) return;
+    // Чекбокс — обработается отдельно на 'change', клик не должен открывать drawer
+    if (target.classList.contains('row-check')) {
+      e.stopPropagation();
+      return;
+    }
+    // Копирование
+    const copyEl = target.closest('[data-copy]');
+    if (copyEl) {
+      copyToClipboard(copyEl.dataset.copy);
+      e.stopPropagation();
+      return;
+    }
+    // Открытие drawer — на td с data-action="open"
+    const openTd = target.closest('td[data-action="open"]');
+    if (openTd) {
+      const tr = openTd.closest('tr');
+      if (tr && tr.dataset.id) openDrawer(tr.dataset.id);
+    }
+  });
 
+  // Изменения чекбокса и status-select
+  tbody.addEventListener('change', e => {
+    const target = e.target;
+    if (target.classList.contains('row-check')) {
+      toggleSelection(target.dataset.id, target.checked);
+    } else if (target.classList.contains('status-select')) {
+      onStatusChange(target);
+    }
+  });
+}
 document.getElementById('searchInput').addEventListener('input', debounce(e => {
   filters.search = e.target.value; render();
 }, 300));
@@ -2356,6 +2433,7 @@ function getMockData() {
 /* =========================================================================
    INIT
    ========================================================================= */
+setupTableDelegation();
 updatePositionFilter();
 fetchLeads();
 </script>
