@@ -122,6 +122,10 @@
     border-color: var(--accent); font-weight: 600;
     box-shadow: 0 2px 8px rgba(99,102,241,0.28);
   }
+  /* Кнопки в header с динамическим текстом ("Запустить парсинг" ↔ "Парсинг идёт...")
+     не должны менять ширину — иначе соседние кнопки прыгают. */
+  #refreshBtn, #outreachBtn { min-width: 168px; justify-content: center; }
+  #enrichBtn, #lprBtn, #outreachSelectedBtn { min-width: 92px; justify-content: center; }
   button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   button.primary:disabled { background: #a5b4fc; border-color: #a5b4fc; box-shadow: none; }
 
@@ -130,6 +134,13 @@
     font-weight: 600; box-shadow: 0 2px 8px rgba(3,105,161,0.2);
   }
   button.blue:hover { background: #075985; border-color: #075985; }
+
+  button.green {
+    background: var(--green); color: #fff; border-color: var(--green);
+    font-weight: 600; box-shadow: 0 2px 8px rgba(21,128,61,0.2);
+  }
+  button.green:hover { background: #166534; border-color: #166534; }
+  button.green:disabled { background: #86efac; border-color: #86efac; box-shadow: none; }
 
   button.icon-only {
     padding: 0; width: 34px; height: 34px;
@@ -149,7 +160,7 @@
 
   /* ─── Stat cards ───────────────────────────────────────────────────────── */
   .stats {
-    display: grid; grid-template-columns: repeat(6, 1fr);
+    display: grid; grid-template-columns: repeat(8, 1fr);
     gap: 10px; margin-bottom: 16px;
   }
   .stat-card {
@@ -202,7 +213,19 @@
     background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border);
     border-radius: 4px; padding: 1px 5px; font-size: 10px;
     font-family: 'JetBrains Mono', monospace;
+    transition: opacity 0.12s;
   }
+  .search-wrap.has-text .kbd { display: none; }
+  .search-clear {
+    position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px; padding: 0;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 50%; color: var(--text-muted); cursor: pointer;
+    font-size: 16px; line-height: 1; box-shadow: none;
+    display: none; align-items: center; justify-content: center;
+  }
+  .search-wrap.has-text .search-clear { display: inline-flex; }
+  .search-clear:hover { background: var(--surface-3); color: var(--text); }
   .filters-dropdowns {
     display: flex; gap: 7px; flex: 1; align-items: center; flex-wrap: wrap;
   }
@@ -249,14 +272,26 @@
   .cpill:hover, .dpill:hover {
     background: var(--surface-2); color: var(--text); border-color: var(--border-mid);
   }
+  /* Активные pills — НЕ меняем font-weight, иначе текст шире → ряд «плавает».
+     Цвет + фон + бордер дают достаточный визуальный сигнал активности. */
   .cpill.cpill-active {
     background: var(--accent-light); border-color: var(--accent);
-    color: var(--accent); font-weight: 600;
+    color: var(--accent);
   }
   .dpill.dpill-active {
     background: var(--surface-3); border-color: var(--border-mid);
-    color: var(--text); font-weight: 600;
+    color: var(--text);
   }
+  .pill-count {
+    display: inline-block; margin-left: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--text-muted); opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+    /* Резервируем ширину под 3-4 цифры — счётчик не двигает остальные элементы. */
+    min-width: 2.4ch; text-align: right;
+  }
+  .cpill-active .pill-count { color: var(--accent); opacity: 1; }
+  .cpill.is-empty { opacity: 0.45; pointer-events: none; }
 
   /* ─── Reset button ─────────────────────────────────────────────────────── */
   .reset-filters-btn {
@@ -386,15 +421,20 @@
 
   /* ─── Status select ────────────────────────────────────────────────────── */
   .status-select {
-    padding: 5px 24px 5px 10px; font-size: 12px; font-weight: 500;
-    border-radius: 999px; min-width: 108px; cursor: pointer;
-    box-shadow: none; height: auto; transition: opacity 0.12s;
+    padding: 5px 26px 5px 12px; font-size: 12px; font-weight: 500;
+    border-radius: 999px; width: 100%; min-width: 120px; max-width: 160px;
+    cursor: pointer; box-shadow: none; height: auto; transition: opacity 0.12s;
+    /* override global select appearance so arrow renders correctly */
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23a09a92' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 9px center;
   }
   .status-select:hover { opacity: 0.85; }
-  .status-new         { background: var(--surface-2); color: var(--text-mid); border-color: var(--border); }
-  .status-in_progress { background: var(--blue-light); color: var(--blue); border-color: var(--blue-border); }
-  .status-contacted   { background: var(--green-light); color: var(--green); border-color: var(--green-border); }
-  .status-skip        { background: var(--surface-3); color: var(--text-muted); border-color: var(--border-mid); }
+  .status-select:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+  .status-new   { background: var(--surface-2); color: var(--text-mid); border-color: var(--border); }
+  .status-sent  { background: var(--green-light); color: var(--green); border-color: var(--green-border); }
+  .status-error { background: var(--red-light); color: var(--red); border-color: var(--red-border); }
+  .status-dnc   { background: #1c1a17; color: #f5f4f2; border-color: #1c1a17; }
 
   /* ─── Empty / loading ──────────────────────────────────────────────────── */
   .empty-state, .loading-state {
@@ -420,7 +460,7 @@
   .check-cell-inner { display: flex; align-items: center; justify-content: center; padding: 0 0 0 14px; min-height: 54px; }
   .cell-city    { color: var(--text-mid); font-size: 13px; }
   .cell-posted  { color: var(--text-muted); font-size: 12px; }
-  .cell-status  { padding-right: 12px; }
+  .cell-status  { padding: 8px 10px 8px 12px; }
   .website-link { color: var(--text-mid); text-decoration: none; }
   .website-link:hover { color: var(--accent); }
   .dash         { color: var(--text-muted); }
@@ -462,6 +502,84 @@
     font-family: inherit; font-size: 13px; transition: border-color 0.14s, box-shadow 0.14s;
   }
   .modal input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+  /* ─── Toggle switch ──────────────────────────────────────────────────────
+     ВАЖНО: внутри .modal все <label> получают display:block + uppercase из .modal label.
+     Перекрываем эти стили через .modal .toggle-wrap (выше специфичность). */
+  .modal .toggle-field {
+    margin-top: 18px; padding: 14px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .modal .toggle-wrap,
+  .toggle-wrap {
+    display: flex !important;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 0 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    color: var(--text) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+  }
+  .toggle-wrap input[type="checkbox"] {
+    /* Прячем нативный — стилизуем .toggle-track */
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+  }
+  .toggle-track {
+    position: relative;
+    flex-shrink: 0;
+    display: inline-block;
+    width: 44px; height: 24px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-mid);
+    border-radius: 999px;
+    transition: background 0.18s, border-color 0.18s;
+  }
+  .toggle-thumb {
+    position: absolute; top: 1px; left: 1px;
+    width: 20px; height: 20px;
+    background: #fff; border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.22);
+    transition: transform 0.18s cubic-bezier(0.34,1.4,0.64,1);
+  }
+  .toggle-wrap input:checked ~ .toggle-track {
+    background: var(--green); border-color: var(--green);
+  }
+  .toggle-wrap input:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(20px);
+  }
+  .toggle-wrap input:focus-visible ~ .toggle-track {
+    box-shadow: 0 0 0 3px rgba(21,128,61,0.25);
+  }
+  .toggle-text {
+    display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;
+  }
+  .toggle-title {
+    font-size: 13.5px; font-weight: 600; color: var(--text);
+    text-transform: none; letter-spacing: 0;
+  }
+  .toggle-hint {
+    font-size: 11.5px; color: var(--text-muted); line-height: 1.5;
+    text-transform: none; letter-spacing: 0; font-weight: 400;
+  }
+  .toggle-state {
+    flex-shrink: 0; font-size: 11px; font-weight: 700;
+    color: var(--text-muted); letter-spacing: 0.05em;
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 32px; text-align: center;
+  }
+  .toggle-wrap input:checked ~ .toggle-state { color: var(--green); }
   .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
 
   /* ─── Parser modal ─────────────────────────────────────────────────────── */
@@ -691,7 +809,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ─── Responsive ───────────────────────────────────────────────────────── */
-  @media (max-width: 1200px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 1200px) { .stats { grid-template-columns: repeat(4, 1fr); } }
   @media (max-width: 900px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
     main { padding: 14px 16px; }
@@ -701,6 +819,197 @@
     .search-wrap .kbd { display: none; }
     .drawer { width: 100%; border-left: none; }
   }
+
+  /* ─── Funnel Modal ──────────────────────────────────────────────────────── */
+  .funnel-modal { max-width: 720px !important; }
+  .funnel-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .funnel-table th, .funnel-table td {
+    padding: 9px 12px; text-align: right; font-size: 12.5px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .funnel-table th {
+    text-align: right; font-size: 10.5px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; background: var(--surface-2);
+  }
+  .funnel-table th:first-child, .funnel-table td:first-child { text-align: left; }
+  .funnel-table td.cat-name { font-weight: 600; color: var(--text); }
+  .funnel-table .tier-1 { color: var(--green); }
+  .funnel-table .tier-2 { color: var(--blue); }
+  .funnel-table .tier-3 { color: var(--amber); }
+  .funnel-table td.muted { color: var(--text-muted); }
+  .funnel-table tr.totals td {
+    background: var(--surface-2); font-weight: 700;
+    border-top: 2px solid var(--border-mid); border-bottom: none;
+  }
+  .funnel-rate-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+  .funnel-rate-pill.hot  { background: var(--green-light); color: var(--green); border-color: var(--green-border); }
+  .funnel-rate-pill.warm { background: var(--amber-light); color: var(--amber); border-color: var(--amber-border); }
+  .funnel-rate-pill.cold { background: var(--red-light);   color: var(--red);   border-color: var(--red-border); }
+
+  /* ─── Outreach Modal ────────────────────────────────────────────────────── */
+  .outreach-modal {
+    max-width: 660px !important; padding: 0 !important;
+    display: flex; flex-direction: column; max-height: 90vh;
+  }
+  .outreach-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .outreach-header h2 { margin-bottom: 0; }
+  .outreach-close {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 999px; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); cursor: pointer; box-shadow: none; transition: all 0.13s;
+  }
+  .outreach-close:hover { background: var(--surface-3); color: var(--text); }
+  .outreach-body {
+    flex: 1; overflow-y: auto; padding: 18px 24px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .outreach-body::-webkit-scrollbar { width: 4px; }
+  .outreach-body::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
+  .oa-section-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .oa-section-label {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+  }
+  .oa-section-aside { display: flex; gap: 8px; align-items: center; }
+  .oa-link-btn {
+    font-size: 11.5px; font-weight: 500; color: var(--accent);
+    background: none; border: none; cursor: pointer; padding: 0; box-shadow: none;
+  }
+  .oa-link-btn:hover { text-decoration: underline; }
+  .oa-lead-list {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    max-height: 220px; overflow-y: auto;
+  }
+  .oa-lead-list::-webkit-scrollbar { width: 4px; }
+  .oa-lead-list::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
+  .oa-lead-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.1s; user-select: none;
+  }
+  .oa-lead-row:last-child { border-bottom: none; }
+  .oa-lead-row:hover { background: var(--surface-2); }
+  .oa-lead-row.oa-checked { background: var(--accent-light); }
+  .oa-lead-row input[type="checkbox"] {
+    accent-color: var(--accent); width: 14px; height: 14px; flex-shrink: 0; pointer-events: none;
+  }
+  .oa-lead-info { flex: 1; min-width: 0; }
+  .oa-lead-company {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .oa-lead-sub {
+    font-size: 11.5px; color: var(--text-muted); margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .oa-lead-phone-inline { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+  .oa-var-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .oa-var-pill {
+    display: inline-flex; align-items: center; gap: 0;
+    border: 1px solid var(--border); border-radius: 5px;
+    overflow: hidden; font-size: 11px; line-height: 1;
+  }
+  .oa-var-pill-key {
+    padding: 2px 5px; background: var(--surface-3); color: var(--accent);
+    font-family: 'JetBrains Mono', monospace; font-weight: 500;
+    border-right: 1px solid var(--border);
+  }
+  .oa-var-pill-val {
+    padding: 2px 6px; background: var(--surface); color: var(--text-mid);
+    max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .oa-empty { text-align: center; padding: 24px 16px; font-size: 13px; color: var(--text-muted); }
+  .oa-vars { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .oa-var-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    background: var(--surface-2); border: 1px solid var(--border-mid);
+    border-radius: var(--radius-xs); padding: 3px 8px;
+    cursor: pointer; color: var(--accent); transition: all 0.12s; box-shadow: none;
+  }
+  .oa-var-chip:hover { background: var(--accent-light); border-color: var(--accent); }
+  .oa-textarea {
+    width: 100%; padding: 9px 11px; background: var(--surface-2);
+    border: 1px solid var(--border-mid); border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px; resize: vertical; color: var(--text);
+    line-height: 1.5; transition: border-color 0.14s, box-shadow 0.14s;
+  }
+  .oa-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .oa-preview-box {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    font-size: 13px; color: var(--text); line-height: 1.55;
+    white-space: pre-wrap; min-height: 60px;
+  }
+  .oa-preview-for { font-size: 11.5px; color: var(--text-muted); }
+  .oa-count-badge {
+    font-size: 11.5px; font-weight: 600;
+    background: var(--green-light); color: var(--green);
+    border: 1px solid var(--green-border); padding: 2px 9px; border-radius: 999px;
+  }
+  .oa-count-badge.oa-zero { background: var(--amber-light); color: var(--amber); border-color: var(--amber-border); }
+  .oa-preview-controls {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .oa-nav-btn {
+    width: 22px; height: 22px; padding: 0;
+    background: var(--surface-2); border: 1px solid var(--border-mid);
+    border-radius: 4px; color: var(--text-mid); cursor: pointer;
+    font-size: 14px; line-height: 1; box-shadow: none;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .oa-nav-btn:hover { background: var(--surface-3); color: var(--text); }
+  .oa-preview-nav {
+    font-size: 11.5px; color: var(--text-muted);
+    font-variant-numeric: tabular-nums; min-width: 32px; text-align: center;
+  }
+  .oa-char-counter {
+    font-size: 11px; color: var(--text-muted); text-align: right;
+    margin-top: 4px; font-variant-numeric: tabular-nums;
+  }
+  .oa-char-counter.warn { color: var(--amber); font-weight: 600; }
+  .oa-preview-warn {
+    margin-top: 8px; padding: 8px 12px;
+    background: var(--amber-light); border: 1px solid var(--amber-border);
+    border-radius: var(--radius-sm); font-size: 11.5px; line-height: 1.6;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .oa-warn-pill {
+    display: inline-block; padding: 2px 8px;
+    background: var(--surface); border: 1px solid var(--amber-border);
+    border-radius: 999px; color: var(--amber); font-weight: 500;
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+  }
+
+  .outreach-footer {
+    padding: 14px 24px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; gap: 10px;
+  }
+  .outreach-footer-left { font-size: 12px; color: var(--text-muted); }
+  .oa-warn-badge {
+    display: inline-block; padding: 2px 8px;
+    background: var(--amber-light); color: var(--amber);
+    border: 1px solid var(--amber-border); border-radius: 999px;
+    font-weight: 600; font-size: 11.5px;
+  }
+  /* Кнопка "Отправить" когда выборка превышает дневной лимит — янтарная, чтобы видно */
+  #outreachRunBtn.over-limit {
+    background: var(--amber); border-color: var(--amber); color: #fff;
+    opacity: 0.7;
+  }
+  #outreachRunBtn.over-limit:hover { opacity: 0.85; }
+  .outreach-footer-right { display: flex; gap: 8px; }
 </style>
 </head>
 <body>
@@ -708,7 +1017,7 @@
 <header>
   <div class="brand">
     <h1>ЛПР<span class="dot">.</span>finder</h1>
-    <span class="subtitle">Внутренний инструмент · v3</span>
+    <span class="subtitle">Внутренний инструмент · v5.3</span>
   </div>
   <div class="header-actions">
     <span class="last-update"><span class="pulse"></span><span id="lastUpdate">никогда</span></span>
@@ -717,6 +1026,10 @@
     </button>
     <button class="icon-only" id="settingsBtn" title="Настройки">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="green" id="outreachBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="outreachIcon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 15.92z"/></svg>
+      <span id="outreachText">Запустить рассылку</span>
     </button>
     <button class="primary" id="refreshBtn">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="refreshIcon"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
@@ -736,8 +1049,8 @@
       <div class="stat-value" id="statWeek">—</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">В работе</div>
-      <div class="stat-value" id="statInProgress">—</div>
+      <div class="stat-label">К отправке</div>
+      <div class="stat-value" id="statToSend" title="status=new + есть мобильный, после дедупа по номеру">—</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Всего</div>
@@ -751,6 +1064,14 @@
       <div class="stat-label">С ЛПР</div>
       <div class="stat-value" id="statWithDirector">—</div>
     </div>
+    <div class="stat-card">
+      <div class="stat-label">Отправлено WA</div>
+      <div class="stat-value" id="statSent">—</div>
+    </div>
+    <div class="stat-card highlight" style="cursor:pointer" id="funnelCard" title="Открыть воронку по категориям">
+      <div class="stat-label">Откликнулись</div>
+      <div class="stat-value" id="statReplied">—</div>
+    </div>
   </div>
 
   <!-- Ряд 1: поиск + выпадающие фильтры -->
@@ -758,7 +1079,8 @@
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="Поиск по компании, вакансии, ФИО, БИН...">
-      <span class="kbd">⌘K</span>
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Очистить (Esc)" tabindex="-1">×</button>
+      <span class="kbd" id="searchKbd">⌘K</span>
     </div>
     <div class="filters-dropdowns">
       <select id="filterPosition"></select>
@@ -768,18 +1090,18 @@
     </div>
   </div>
 
-  <!-- Ряд 2: быстрые фильтры-pills -->
+  <!-- Ряд 2: быстрые фильтры-pills (счётчики обновляются в updatePillCounts) -->
   <div class="filters-row2">
-    <button class="cpill" data-val="phone"       onclick="toggleContactPill(this)">📞 Телефон</button>
-    <button class="cpill" data-val="whatsapp"    onclick="toggleContactPill(this)">💬 WhatsApp</button>
-    <button class="cpill" data-val="email"       onclick="toggleContactPill(this)">✉ Email</button>
-    <button class="cpill" data-val="director"    onclick="toggleContactPill(this)">👤 ЛПР</button>
-    <button class="cpill" data-val="no_lpr"      onclick="toggleContactPill(this)">Без ЛПР</button>
-    <button class="cpill" data-val="no_contacts" onclick="toggleContactPill(this)">Без контактов</button>
+    <button class="cpill" data-val="phone"       onclick="toggleContactPill(this)">📞 Телефон <span class="pill-count" data-c="phone">—</span></button>
+    <button class="cpill" data-val="whatsapp"    onclick="toggleContactPill(this)">💬 WhatsApp <span class="pill-count" data-c="whatsapp">—</span></button>
+    <button class="cpill" data-val="email"       onclick="toggleContactPill(this)">✉ Email <span class="pill-count" data-c="email">—</span></button>
+    <button class="cpill" data-val="director"    onclick="toggleContactPill(this)">👤 ЛПР <span class="pill-count" data-c="director">—</span></button>
+    <button class="cpill" data-val="no_lpr"      onclick="toggleContactPill(this)">Без ЛПР <span class="pill-count" data-c="no_lpr">—</span></button>
+    <button class="cpill" data-val="no_contacts" onclick="toggleContactPill(this)">Без контактов <span class="pill-count" data-c="no_contacts">—</span></button>
     <span class="filters-sep"></span>
-    <button class="dpill" data-days="0"  onclick="toggleDatePill(this)">За всё время</button>
+    <button class="dpill dpill-active" data-days="0" onclick="toggleDatePill(this)">За всё время</button>
     <button class="dpill" data-days="1"  onclick="toggleDatePill(this)">Сегодня</button>
-    <button class="dpill dpill-active" data-days="7"  onclick="toggleDatePill(this)">Неделя</button>
+    <button class="dpill" data-days="7"  onclick="toggleDatePill(this)">Неделя</button>
     <button class="dpill" data-days="90" onclick="toggleDatePill(this)">3 месяца</button>
     <button class="reset-filters-btn" id="resetFiltersBtn" onclick="resetFilters()" title="Сбросить все фильтры">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -794,9 +1116,7 @@
     <select id="bulkStatus" onchange="bulkSetStatus(this.value); this.value=''">
       <option value="">Сменить статус...</option>
       <option value="new">Новый</option>
-      <option value="in_progress">В работе</option>
-      <option value="contacted">Связались</option>
-      <option value="skip">Пропустить</option>
+      <option value="dnc">⛔ Не писать</option>
     </select>
     <span class="spacer"></span>
     <button class="blue" id="lprBtn" onclick="findLprSelected()">
@@ -807,19 +1127,23 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="enrichIcon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M21 3v6h-6"/></svg>
       <span id="enrichText">2GIS</span>
     </button>
+    <button class="green" id="outreachSelectedBtn" onclick="openOutreachModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 15.92z"/></svg>
+      <span>Рассылка</span>
+    </button>
   </div>
 
   <div class="table-wrap">
     <table>
       <colgroup>
         <col style="width:44px">
-        <col style="width:30%">
-        <col style="width:10%">
-        <col style="width:16%">
-        <col style="width:22%">
+        <col style="width:28%">
         <col style="width:9%">
-        <col style="width:7%">
-        <col style="width:10%">
+        <col style="width:15%">
+        <col style="width:20%">
+        <col style="width:8%">
+        <col style="width:6%">
+        <col style="width:130px">
       </colgroup>
       <thead>
         <tr>
@@ -893,6 +1217,26 @@
       <label>POST — сохранить заметку</label>
       <input type="text" id="wh_note_input" placeholder="https://...">
     </div>
+    <div class="field">
+      <label>POST — запустить рассылку WhatsApp</label>
+      <input type="text" id="wh_outreach_input" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>Дневной лимит WA-отправок (защита от бана)</label>
+      <input type="number" id="wa_daily_limit_input" min="1" max="1000" placeholder="80">
+    </div>
+
+    <div class="field toggle-field">
+      <label class="toggle-wrap" for="idempotency_lock_input">
+        <span class="toggle-text">
+          <span class="toggle-title">🔒 Защита от двойной отправки</span>
+          <span class="toggle-hint">Один лид = одно сообщение в день. Выкл — можно повторять (для тестов).</span>
+        </span>
+        <input type="checkbox" id="idempotency_lock_input">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+
     <div class="actions">
       <button onclick="closeModal()">Отмена</button>
       <button class="primary" onclick="saveSettings()">Сохранить</button>
@@ -926,6 +1270,88 @@
   </div>
 </div>
 
+<!-- Funnel modal — по категориям ICP -->
+<div class="modal-overlay" id="funnelModal">
+  <div class="modal funnel-modal">
+    <h2>📊 Воронка по категориям ICP</h2>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">
+      Где лучше работает рассылка — те тиры и парсим в первую очередь.
+    </p>
+    <div id="funnelBody"></div>
+    <div class="actions" style="margin-top:14px;">
+      <button onclick="closeFunnelModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Outreach modal -->
+<div class="modal-overlay" id="outreachModal">
+  <div class="modal outreach-modal">
+    <!-- Header -->
+    <div class="outreach-header">
+      <h2>💬 Рассылка WhatsApp</h2>
+      <button class="outreach-close" onclick="closeOutreachModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <!-- Scrollable body -->
+    <div class="outreach-body">
+      <!-- Получатели -->
+      <div>
+        <div class="oa-section-head">
+          <span class="oa-section-label">Получатели</span>
+          <div class="oa-section-aside">
+            <span class="oa-count-badge oa-zero" id="oaCountBadge">0 лидов</span>
+            <button class="oa-link-btn" onclick="oaSelectAll(true)">Все</button>
+            <button class="oa-link-btn" onclick="oaSelectAll(false)">Снять</button>
+          </div>
+        </div>
+        <div class="oa-lead-list" id="oaLeadList"></div>
+      </div>
+      <!-- Сообщение -->
+      <div>
+        <div class="oa-section-head">
+          <span class="oa-section-label">Сообщение</span>
+        </div>
+        <div class="oa-vars">
+          <button class="oa-var-chip" onclick="oaInsertVar('{{name}}')" title="Только имя из ФИО — для дружелюбного обращения">{{name}}</button>
+          <button class="oa-var-chip" onclick="oaInsertVar('{{director}}')" title="Полное ФИО — для формальных шаблонов">{{director}}</button>
+          <button class="oa-var-chip" onclick="oaInsertVar('{{company}}')">{{company}}</button>
+          <button class="oa-var-chip" onclick="oaInsertVar('{{vacancy}}')">{{vacancy}}</button>
+          <button class="oa-var-chip" onclick="oaInsertVar('{{city}}')">{{city}}</button>
+        </div>
+        <textarea id="outreachMessage" class="oa-textarea" rows="6" placeholder="Здравствуйте! Меня зовут ..." oninput="updateOaPreview()"></textarea>
+        <div class="oa-char-counter" id="oaCharCounter">0 симв.</div>
+      </div>
+      <!-- Превью -->
+      <div id="oaPreviewSection" style="display:none;">
+        <div class="oa-section-head">
+          <span class="oa-section-label">Превью</span>
+          <div class="oa-preview-controls">
+            <span class="oa-preview-for" id="oaPreviewFor"></span>
+            <button class="oa-nav-btn" onclick="oaPreviewPrev()" title="Предыдущий лид">‹</button>
+            <span class="oa-preview-nav" id="oaPreviewNav"></span>
+            <button class="oa-nav-btn" onclick="oaPreviewNext()" title="Следующий лид">›</button>
+          </div>
+        </div>
+        <div class="oa-preview-box" id="oaPreviewBox"></div>
+        <div class="oa-preview-warn" id="oaPreviewWarn" style="display:none;"></div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="outreach-footer">
+      <span class="outreach-footer-left" id="oaSkippedNote"></span>
+      <div class="outreach-footer-right">
+        <button onclick="closeOutreachModal()">Отмена</button>
+        <button class="green" id="outreachRunBtn" onclick="runOutreach()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span id="outreachRunBtnLabel">Отправить <span id="oaSendCount">0</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -933,25 +1359,38 @@
    КОНФИГ
    ========================================================================= */
 const DEFAULT_CONFIG = {
-  wh_leads:   'https://amiraskar2308.app.n8n.cloud/webhook/leads',
-  wh_refresh: 'https://amiraskar2308.app.n8n.cloud/webhook/refresh',
-  wh_status:  'https://amiraskar2308.app.n8n.cloud/webhook/lead-status',
-  wh_stats:   'https://amiraskar2308.app.n8n.cloud/webhook/stats',
-  wh_enrich:  'https://amiraskar2308.app.n8n.cloud/webhook/enrich-2gis',
-  wh_lpr:     'https://amiraskar2308.app.n8n.cloud/webhook/find-lpr',
-  wh_note:    'https://amiraskar2308.app.n8n.cloud/webhook/lead-note',
+  wh_leads:    'https://amiraskar2308.app.n8n.cloud/webhook/leads',
+  wh_refresh:  'https://amiraskar2308.app.n8n.cloud/webhook/refresh',
+  wh_status:   'https://amiraskar2308.app.n8n.cloud/webhook/lead-status',
+  wh_stats:    'https://amiraskar2308.app.n8n.cloud/webhook/stats',
+  wh_enrich:   'https://amiraskar2308.app.n8n.cloud/webhook/enrich-2gis',
+  wh_lpr:      'https://amiraskar2308.app.n8n.cloud/webhook/find-lpr',
+  wh_note:     'https://amiraskar2308.app.n8n.cloud/webhook/lead-note',
+  wh_outreach: 'https://amiraskar2308.app.n8n.cloud/webhook/outreach',
+  // Дневной лимит первичных WA-сообщений — защита от бана аккаунта.
+  // По умолчанию 80/сутки — консервативная цифра для не-warm-up аккаунта.
+  wa_daily_limit: 80,
+  // Защита от двойной отправки одному лиду в один день. Реализована через
+  // idempotency_key на бэке. Можно выключить для тестов/повторов.
+  idempotency_lock: true,
 };
 
 
+// Порядок статусов для сортировки — должен покрывать ВСЕ возможные значения,
+// иначе indexOf вернёт -1 и группа «неизвестных» статусов окажется в неопределённом порядке.
+const STATUS_ORDER = ['new', 'sent', 'error', 'dnc'];
 const SORT_OPTIONS = {
   posted:  l => l.posted || '',
   company: l => (l.company || '').toLowerCase(),
   city:    l => (l.city || '').toLowerCase(),
-  status:  l => ['new','in_progress','contacted','skip'].indexOf(l.status || 'new'),
+  status:  l => {
+    const idx = STATUS_ORDER.indexOf(l.status || 'new');
+    return idx === -1 ? STATUS_ORDER.length : idx;   // неизвестные — в конец
+  },
 };
 
 const POSITION_LABELS = { rop: 'РОП / Руководитель продаж', hr: 'HR / Рекрутер', other: 'Другое' };
-const STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', contacted: 'Связались', skip: 'Пропустить' };
+const STATUS_LABELS = { new: 'Новый', sent: 'Отправлено', error: 'Ошибка', dnc: 'Не писать' };
 
 /* =========================================================================
    СОСТОЯНИЕ
@@ -959,10 +1398,13 @@ const STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', conta
 let config = loadConfig();
 let allLeads = [];
 let serverStats = null;
-let filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:7 };
+let filters = { search:'', position:'', city:'', rubric:'', status:'', has:[], date:0 };
 let selectedIds = new Set();
 let sortState = { column: 'posted', direction: 'desc' };
 let openLeadId = null;
+// Счётчик версии allLeads — инкрементируется при любом изменении содержимого
+// (не только длины). Используется для корректной инвалидации кеша фильтров.
+let _allLeadsVersion = 0;
 
 /* =========================================================================
    ХЕЛПЕРЫ
@@ -1026,6 +1468,27 @@ function normalizePhone(phone) {
   return d;
 }
 
+// Извлекает имя из ФИО для дружелюбного обращения в сообщении.
+// "БЕКЕНОВ НУРЛАН АДИЛЬХАНОВИЧ" → "Нурлан"
+// "Иванов Иван Иванович"      → "Иван"
+// "Сергеев И. В."              → "Сергеев" (инициалы пропускаем, fallback на фамилию)
+// "ЖҰМАХАН ЕРКЕБҰЛАН"          → "Еркебұлан"
+// "Иванов"                     → "Иванов" (одно слово — оно и есть)
+function firstName(fio) {
+  if (!fio) return '';
+  const parts = String(fio).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  const titleCase = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+  // Ищем первое не-инициальное слово после фамилии (т.е. позиция ≥ 1)
+  for (let i = 1; i < parts.length; i++) {
+    // инициал = одна буква, опционально с точкой ("И", "И.")
+    if (/^[\p{L}]\.?$/u.test(parts[i])) continue;
+    return titleCase(parts[i]);
+  }
+  // Не нашли — возвращаем первое слово (одиночное ФИО или только фамилия+инициалы)
+  return titleCase(parts[0]);
+}
+
 // 'mobile' | 'landline' | 'unknown'
 function phoneType(phone) {
   const d = normalizePhone(phone);
@@ -1079,6 +1542,15 @@ function normalizeCity(city) {
   return CITY_MAP[key] || city.trim();
 }
 
+
+// Красивое отображение телефона: +7 777 123 45 67. Внутри БД и data-copy
+// остаётся компактный +7XXXXXXXXXX — это то, что WA принимает 1-в-1.
+function formatPhonePretty(phone) {
+  if (!phone) return '';
+  const m = String(phone).match(/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/);
+  if (!m) return phone;   // если по какой-то причине формат другой — отдать как есть
+  return `+7 ${m[1]} ${m[2]} ${m[3]} ${m[4]}`;
+}
 
 // Возвращает ссылку wa.me если номер мобильный, иначе null
 function waLink(phone) {
@@ -1196,24 +1668,31 @@ function toast(msg, variant) {
    ========================================================================= */
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 function openSettings() {
-  document.getElementById('wh_leads').value     = config.wh_leads   || '';
-  document.getElementById('wh_refresh').value   = config.wh_refresh || '';
-  document.getElementById('wh_status').value    = config.wh_status  || '';
-  document.getElementById('wh_stats').value     = config.wh_stats   || '';
-  document.getElementById('wh_enrich').value    = config.wh_enrich  || '';
-  document.getElementById('wh_lpr_input').value = config.wh_lpr     || '';
-  document.getElementById('wh_note_input').value = config.wh_note   || '';
+  document.getElementById('wh_leads').value        = config.wh_leads    || '';
+  document.getElementById('wh_refresh').value      = config.wh_refresh  || '';
+  document.getElementById('wh_status').value       = config.wh_status   || '';
+  document.getElementById('wh_stats').value        = config.wh_stats    || '';
+  document.getElementById('wh_enrich').value       = config.wh_enrich   || '';
+  document.getElementById('wh_lpr_input').value    = config.wh_lpr      || '';
+  document.getElementById('wh_note_input').value   = config.wh_note     || '';
+  document.getElementById('wh_outreach_input').value = config.wh_outreach || '';
+  document.getElementById('wa_daily_limit_input').value = config.wa_daily_limit ?? 80;
+  document.getElementById('idempotency_lock_input').checked = config.idempotency_lock !== false;
   document.getElementById('settingsModal').classList.add('open');
 }
 function closeModal() { document.getElementById('settingsModal').classList.remove('open'); }
 function saveSettings() {
-  config.wh_leads   = document.getElementById('wh_leads').value.trim();
-  config.wh_refresh = document.getElementById('wh_refresh').value.trim();
-  config.wh_status  = document.getElementById('wh_status').value.trim();
-  config.wh_stats   = document.getElementById('wh_stats').value.trim();
-  config.wh_enrich  = document.getElementById('wh_enrich').value.trim();
-  config.wh_lpr     = document.getElementById('wh_lpr_input').value.trim();
-  config.wh_note    = document.getElementById('wh_note_input').value.trim();
+  config.wh_leads    = document.getElementById('wh_leads').value.trim();
+  config.wh_refresh  = document.getElementById('wh_refresh').value.trim();
+  config.wh_status   = document.getElementById('wh_status').value.trim();
+  config.wh_stats    = document.getElementById('wh_stats').value.trim();
+  config.wh_enrich   = document.getElementById('wh_enrich').value.trim();
+  config.wh_lpr      = document.getElementById('wh_lpr_input').value.trim();
+  config.wh_note     = document.getElementById('wh_note_input').value.trim();
+  config.wh_outreach = document.getElementById('wh_outreach_input').value.trim();
+  const parsedLimit = parseInt(document.getElementById('wa_daily_limit_input').value, 10);
+  config.wa_daily_limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 80;
+  config.idempotency_lock = document.getElementById('idempotency_lock_input').checked;
   saveConfig();
   closeModal();
   toast('Настройки сохранены', 'success');
@@ -1233,7 +1712,14 @@ async function fetchLeads(opts = {}) {
   const { showSkeleton = true, preserveScroll = false } = opts;
   const scrollY = preserveScroll ? window.scrollY : 0;
 
-  if (!config.wh_leads) { allLeads = getMockData().map(normalizeLead); render(); return; }
+  // Если webhook не настроен — единственный случай для мок-данных (онбординг).
+  // ИНАЧЕ ошибку показываем честно: не подсовываем фейковых лидов в проде.
+  if (!config.wh_leads) {
+    allLeads = getMockData().map(normalizeLead);
+    render();
+    toast('Webhook /leads не настроен — показаны демо-данные. Открой ⚙', true);
+    return;
+  }
   if (showSkeleton) showLoadingSkeleton();
   try {
     const res = await fetch(config.wh_leads);
@@ -1241,6 +1727,7 @@ async function fetchLeads(opts = {}) {
     const data = await res.json();
     const raw = Array.isArray(data) ? data : (data.leads || []);
     allLeads = raw.map(normalizeLead);
+    _allLeadsVersion++;          // контент обновился — сбросить кеш фильтров
     setLastUpdate();
     render();
     if (preserveScroll) {
@@ -1249,10 +1736,26 @@ async function fetchLeads(opts = {}) {
     }
     fetchStats();
   } catch (e) {
+    // Не подменяем allLeads на mock! Иначе оператор видит "TechCorp Almaty"
+    // вместо понятной ошибки и может принять её за реальные данные.
     toast('Ошибка загрузки: ' + e.message, true);
-    allLeads = getMockData().map(normalizeLead);
-    render();
+    showFetchError(e.message);
   }
+}
+
+function showFetchError(msg) {
+  const tbody = document.getElementById('leadsBody');
+  const empty = document.getElementById('emptyState');
+  tbody.innerHTML = '';
+  empty.style.display = 'block';
+  empty.innerHTML = `
+    <h3>Не удалось загрузить лидов</h3>
+    <p>${esc(msg)}</p>
+    <p style="margin-top:8px;color:var(--text-muted);font-size:12px;">
+      Проверь webhook URL в настройках, либо что n8n / Neon доступны.
+    </p>
+    <button onclick="fetchLeads()" class="primary" style="margin-top:14px;">Повторить</button>
+  `;
 }
 async function fetchStats() {
   if (!config.wh_stats) { serverStats = null; return; }
@@ -1335,8 +1838,8 @@ function parserToggleQuery(id, el) {
   if (q) {
     const tierQueries = PARSING_QUERIES.filter(qq => qq.tier === q.tier);
     const allChk = tierQueries.every(qq => selectedParserIds.has(qq.id));
-    const header = el.closest('.parser-tier-group')?.querySelector('.parser-tier-toggle');
-    if (header) header.textContent = allChk ? 'Снять' : 'Все';
+    const header = el.closest('.parser-tier-group')?.querySelector('.parser-tier-label-toggle');
+    if (header) header.textContent = allChk ? 'снять' : 'все';
   }
 }
 
@@ -1394,11 +1897,12 @@ async function runParser() {
   text.textContent = 'Парсинг идёт...';
 
   try {
-    await fetch(config.wh_refresh, {
+    const res = await fetch(config.wh_refresh, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ queries })
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     toast(`Запущено ${queries.length} запросов. Через минуту обновлю.`, 'success');
     setTimeout(() => fetchLeads({ showSkeleton: false, preserveScroll: true }), 60000);
   } catch (e) {
@@ -1414,11 +1918,12 @@ async function triggerRefresh() { openParserModal(); }
 async function updateStatus(id, newStatus) {
   if (!config.wh_status) { toast('Webhook для статусов не настроен ⚙', true); return; }
   try {
-    await fetch(config.wh_status, {
+    const res = await fetch(config.wh_status, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status: newStatus })
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
   } catch (e) { toast('Ошибка: ' + e.message, true); }
 }
 
@@ -1435,12 +1940,18 @@ function toggleSelection(id, checked) {
 }
 function toggleSelectAll() {
   const master = document.getElementById('selectAllCheck');
-  const visible = document.querySelectorAll('#leadsBody .row-check');
-  visible.forEach(cb => {
+  // BUG FIX: выбираем ВСЕ отфильтрованные лиды, а не только видимые в DOM
+  // (при виртуальном рендере первые PAGE_SIZE строк). Иначе bulk-операция
+  // применялась только к первым 100 записям из N.
+  const allFiltered = applyFilters(allLeads);
+  if (master.checked) {
+    allFiltered.forEach(l => selectedIds.add(String(l.id)));
+  } else {
+    allFiltered.forEach(l => selectedIds.delete(String(l.id)));
+  }
+  // Синхронизируем состояние DOM-чекбоксов (только текущие видимые строки)
+  document.querySelectorAll('#leadsBody .row-check').forEach(cb => {
     cb.checked = master.checked;
-    const id = cb.dataset.id;
-    if (master.checked) selectedIds.add(id);
-    else                selectedIds.delete(id);
     cb.closest('tr')?.classList.toggle('selected', master.checked);
   });
   updateSelectionBar();
@@ -1464,20 +1975,46 @@ function updateSelectionBar() {
   } else {
     bar.classList.remove('visible');
   }
+  _syncMasterCheckbox();
+}
+
+// Master-checkbox должен отражать реальное состояние выборки относительно ВИДИМЫХ
+// (отфильтрованных) лидов. Три состояния:
+//   • никто не выбран — unchecked
+//   • все видимые выбраны — checked
+//   • некоторые — indeterminate (косая чёрточка)
+function _syncMasterCheckbox() {
+  const master = document.getElementById('selectAllCheck');
+  if (!master) return;
+  const visible = applyFilters(allLeads);
+  if (visible.length === 0) {
+    master.checked = false; master.indeterminate = false;
+    return;
+  }
+  let selectedCount = 0;
+  for (const l of visible) if (selectedIds.has(String(l.id))) selectedCount++;
+  if (selectedCount === 0) {
+    master.checked = false; master.indeterminate = false;
+  } else if (selectedCount === visible.length) {
+    master.checked = true; master.indeterminate = false;
+  } else {
+    master.checked = false; master.indeterminate = true;
+  }
 }
 
 /* Массовая смена статуса для выбранных лидов */
 async function bulkSetStatus(newStatus) {
   if (!newStatus || selectedIds.size === 0) return;
+  // BUG FIX: проверяем webhook раньше, до confirm — иначе пользователь нажимает OK,
+  // а потом получает N ошибок (оптимистичный рендер уже применился).
+  if (!config.wh_status) { toast('Webhook для статусов не настроен ⚙', true); return; }
   const ids = [...selectedIds];
   if (!confirm(`Сменить статус на "${STATUS_LABELS[newStatus]}" для ${ids.length} лидов?`)) return;
 
-  // Оптимистично обновляем локальное состояние
-  for (const id of ids) {
-    const lead = allLeads.find(l => String(l.id) === id);
-    if (lead) lead.status = newStatus;
-  }
-  render();
+  // BUG FIX: НЕ вызываем render() здесь. Если активен фильтр по статусу
+  // (например «Новые»), то после render() все выбранные лиды исчезнут из вида
+  // (стали «В работе»), и пользователь решит что ничего не произошло.
+  // Вместо этого показываем toast, отправляем запросы, потом делаем fetchLeads.
   toast(`Обновляю статусы (${ids.length})...`);
 
   // Отправляем по очереди — webhook принимает по одному id за раз
@@ -1492,12 +2029,22 @@ async function bulkSetStatus(newStatus) {
       if (res.ok) ok++; else failed++;
     } catch { failed++; }
   }
+
+  // Оптимистично обновляем локальное состояние ПОСЛЕ запросов
+  // (fetchLeads всё равно перезапишет, но к этому моменту данные уже актуальны)
+  for (const id of ids) {
+    const lead = allLeads.find(l => String(l.id) === id);
+    if (lead) lead.status = newStatus;
+  }
+  _allLeadsVersion++;   // инвалидируем кеш фильтровых счётчиков
+
   toast(failed === 0
-    ? `Готово: обновлено ${ok} лидов`
+    ? `✓ Обновлено ${ok} лидов`
     : `${ok} обновлено, ${failed} с ошибкой`,
     failed === 0 ? 'success' : true);
   clearSelection();
   fetchStats();
+  fetchLeads({ showSkeleton: false, preserveScroll: true });
 }
 
 /* =========================================================================
@@ -1541,6 +2088,482 @@ function enrichSelected() {
 function findLprSelected() {
   callEnrichment(config.wh_lpr, 'lprBtn', 'lprText', null, 'Ищем');
 }
+document.getElementById('outreachBtn').addEventListener('click', openOutreachModal);
+
+/* =========================================================================
+   FUNNEL — конверсия по категориям ICP
+   ========================================================================= */
+function _funnelComputeRows() {
+  // Для каждой категории: total / sent / replied / dnc / reply rate
+  // sent  = был хоть одна отправка (status='sent' или есть replied_at — лид же ответил, значит писали)
+  // replied = есть replied_at (точный сигнал от WA-inbound)
+  const cats = ['fitness', 'clinic', 'edu', 'beauty', 'sales', 'signal', 'other'];
+  const rows = cats.map(cat => {
+    let total = 0, sent = 0, replied = 0, dnc = 0;
+    for (const l of allLeads) {
+      if ((l.category || 'other') !== cat) continue;
+      total++;
+      if (l.status === 'sent' || l.replied_at) sent++;
+      if (l.replied_at) replied++;
+      if (l.status === 'dnc') dnc++;
+    }
+    const rate = sent > 0 ? Math.round((replied / sent) * 100) : 0;
+    const meta = CATEGORY_META[cat] || { label: cat, tier: 0 };
+    return { cat, label: meta.label, tier: meta.tier, total, sent, replied, dnc, rate };
+  }).filter(r => r.total > 0);
+  // Сортируем по reply rate убывающе (но total=0 уже отфильтрованы)
+  rows.sort((a, b) => b.rate - a.rate || b.sent - a.sent);
+  return rows;
+}
+
+function _funnelRatePill(rate, sent) {
+  if (sent === 0) return '<span class="funnel-rate-pill">—</span>';
+  const cls = rate >= 10 ? 'hot' : rate >= 5 ? 'warm' : 'cold';
+  return `<span class="funnel-rate-pill ${cls}">${rate}%</span>`;
+}
+
+function renderFunnel() {
+  const rows = _funnelComputeRows();
+  const body = document.getElementById('funnelBody');
+  if (rows.length === 0) {
+    body.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center;">Пока нет данных для воронки.</p>';
+    return;
+  }
+  const tot = rows.reduce((a, r) => ({
+    total: a.total + r.total, sent: a.sent + r.sent,
+    replied: a.replied + r.replied, dnc: a.dnc + r.dnc,
+  }), { total: 0, sent: 0, replied: 0, dnc: 0 });
+  const totRate = tot.sent > 0 ? Math.round((tot.replied / tot.sent) * 100) : 0;
+
+  let html = `<table class="funnel-table">
+    <thead><tr>
+      <th>Категория</th><th>Всего</th><th>Отправлено</th><th>Ответили</th><th>DNC</th><th>Reply rate</th>
+    </tr></thead><tbody>`;
+  for (const r of rows) {
+    html += `<tr>
+      <td class="cat-name tier-${r.tier}">${esc(r.label)}</td>
+      <td>${r.total}</td>
+      <td>${r.sent || '<span class="muted">0</span>'}</td>
+      <td>${r.replied || '<span class="muted">0</span>'}</td>
+      <td>${r.dnc ? r.dnc : '<span class="muted">0</span>'}</td>
+      <td>${_funnelRatePill(r.rate, r.sent)}</td>
+    </tr>`;
+  }
+  html += `<tr class="totals">
+    <td>Итого</td><td>${tot.total}</td><td>${tot.sent}</td><td>${tot.replied}</td><td>${tot.dnc}</td>
+    <td>${_funnelRatePill(totRate, tot.sent)}</td>
+  </tr></tbody></table>`;
+  body.innerHTML = html;
+}
+
+function openFunnelModal() {
+  renderFunnel();
+  document.getElementById('funnelModal').classList.add('open');
+}
+function closeFunnelModal() {
+  document.getElementById('funnelModal').classList.remove('open');
+}
+document.getElementById('funnelCard').addEventListener('click', openFunnelModal);
+document.getElementById('funnelModal').addEventListener('click', e => {
+  if (e.target.id === 'funnelModal') closeFunnelModal();
+});
+
+/* =========================================================================
+   OUTREACH — WhatsApp рассылка
+   ========================================================================= */
+
+const OUTREACH_DEFAULT_MSG =
+`Здравствуйте, {{name}}!
+
+Меня зовут Амир, компания AI Closer.
+
+Увидел, что в {{company}} ищете {{vacancy}} — мы помогаем командам продаж автоматизировать первичную обработку заявок с помощью AI.
+
+Удобно пообщаться 5 минут?`;
+
+let _oaSelectedIds = new Set();
+
+// Считаем, сколько первичных WA-сообщений ушло сегодня.
+// Опираемся на l.sent_at (ISO-дата) от сервера; если поля нет — fallback по статусу sent
+// (менее точно, но даёт хоть какое-то ограничение).
+function _countSentToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  let exact = 0, fallback = 0;
+  for (const l of allLeads) {
+    if (l.sent_at && String(l.sent_at).slice(0, 10) === today) exact++;
+    if (l.status === 'sent') fallback++;
+  }
+  // Если сервер заполняет sent_at — используем точный счёт; иначе fallback
+  return allLeads.some(l => l.sent_at) ? exact : fallback;
+}
+
+function _waDailyLimit() {
+  return Number.isFinite(config.wa_daily_limit) && config.wa_daily_limit > 0
+    ? config.wa_daily_limit
+    : 80;
+}
+
+// Один делегированный listener на список лидов рассылки.
+// Раньше каждый <div class="oa-lead-row"> имел inline onclick="oaToggleLead('${id}', this)",
+// что ломалось бы, если id внезапно содержал бы одинарную кавычку.
+(function setupOaListDelegation() {
+  const list = document.getElementById('oaLeadList');
+  if (!list) return;
+  list.addEventListener('click', e => {
+    const row = e.target.closest('.oa-lead-row[data-oa-id]');
+    if (!row) return;
+    oaToggleLead(row.dataset.oaId, row);
+  });
+})();
+
+// Источник лидов для рассылки:
+//   • если у оператора есть выборка в таблице — берём пересечение (выборка ∩ status=new)
+//   • если выборки нет — берём ВСЁ ВИДИМОЕ по текущим фильтрам ∩ status=new
+// В обоих случаях статус строго 'new' (sent/error/dnc — никогда не шлём повторно).
+function _oaGetBaseLeads() {
+  const base = selectedIds.size > 0
+    ? allLeads.filter(l => selectedIds.has(String(l.id)))
+    : applyFilters(allLeads);   // ровно те же лиды, что оператор сейчас видит в таблице
+  return base.filter(l => l.status === 'new');
+}
+
+function _oaGetPool() {
+  const base = _oaGetBaseLeads().filter(l =>
+    l.phone && phoneType(l.phone) === 'mobile'
+  );
+  const seenPhones = new Set();
+  const deduped = [];
+  for (const l of base) {
+    const norm = normalizePhone(l.phone);
+    if (!norm || seenPhones.has(norm)) continue;
+    seenPhones.add(norm);
+    deduped.push(l);
+  }
+  return deduped;
+}
+
+function _oaCountDuplicates() {
+  const eligible = _oaGetBaseLeads().filter(l =>
+    l.phone && phoneType(l.phone) === 'mobile'
+  );
+  return eligible.length - _oaGetPool().length;
+}
+
+function _oaRenderLeads() {
+  const pool = _oaGetPool();
+  const list = document.getElementById('oaLeadList');
+
+  if (pool.length === 0) {
+    const hint = selectedIds.size > 0
+      ? 'В выбранных лидах нет new-статуса с мобильным телефоном.'
+      : 'В текущем фильтре нет new-лидов с мобильным. Подкрути фильтры либо запусти парсер.';
+    list.innerHTML = `<div class="oa-empty">${hint}</div>`;
+    _oaSelectedIds = new Set();
+    _oaUpdateCount();
+    return;
+  }
+
+  // Чистим выборку от лидов, которых больше нет в pool (изменились статусы и т.п.).
+  // НЕ перезаписываем оставшиеся — иначе "Снять все" и ручные снятия игнорируются.
+  // Дефолтная преселекция всех лидов происходит один раз в openOutreachModal().
+  const poolIds = new Set(pool.map(l => String(l.id)));
+  _oaSelectedIds = new Set([..._oaSelectedIds].filter(id => poolIds.has(id)));
+
+  list.innerHTML = pool.map(l => {
+    const id = String(l.id);
+    const checked = _oaSelectedIds.has(id);
+    const vars = [
+      { k: '{{name}}',     v: firstName(l.director) },
+      { k: '{{director}}', v: l.director },
+      { k: '{{company}}',  v: l.company  },
+      { k: '{{vacancy}}',  v: l.vacancy  },
+      { k: '{{city}}',     v: l.city     },
+    ].filter(x => x.v);
+    const varPills = vars.map(x =>
+      `<span class="oa-var-pill"><span class="oa-var-pill-key">${x.k}</span><span class="oa-var-pill-val">${esc(x.v)}</span></span>`
+    ).join('');
+    return `<div class="oa-lead-row${checked ? ' oa-checked' : ''}" data-oa-id="${esc(id)}">
+      <input type="checkbox"${checked ? ' checked' : ''}>
+      <div class="oa-lead-info">
+        <div class="oa-lead-company">${esc(l.company || '—')} <span class="oa-lead-phone-inline">${esc(formatPhonePretty(l.phone) || '')}</span></div>
+        ${varPills ? `<div class="oa-var-pills">${varPills}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  _oaUpdateCount();
+}
+
+function _oaUpdateCount() {
+  const n = _oaSelectedIds.size;
+  const limit = _waDailyLimit();
+  const sentToday = _countSentToday();
+  const remaining = Math.max(0, limit - sentToday);
+  const overLimit = n > remaining;
+
+  const badge = document.getElementById('oaCountBadge');
+  badge.textContent = n + ' лидов';
+  badge.className = 'oa-count-badge' + (overLimit ? ' oa-zero' : (n === 0 ? ' oa-zero' : ''));
+  document.getElementById('oaSendCount').textContent = n;
+
+  // Кнопка отправки — самообъясняющая. Если выборка превышает дневной лимит,
+  // меняем текст с числом и подсветкой, не просто disabled-молчанием.
+  const runBtn = document.getElementById('outreachRunBtn');
+  const runBtnLabel = document.getElementById('outreachRunBtnLabel');
+  if (runBtn && runBtnLabel) {
+    if (n === 0) {
+      runBtn.disabled = true;
+      runBtnLabel.innerHTML = `Отправить <span id="oaSendCount">0</span>`;
+      runBtn.title = '';
+      runBtn.classList.remove('over-limit');
+    } else if (overLimit) {
+      runBtn.disabled = true;
+      runBtnLabel.innerHTML = `Превышен лимит · можно ещё ${remaining}`;
+      runBtn.title = `Выбрано ${n}, но сегодня уже ушло ${sentToday}/${limit}. Сними ${n - remaining} лидов или повысь лимит в настройках.`;
+      runBtn.classList.add('over-limit');
+    } else {
+      runBtn.disabled = false;
+      runBtnLabel.innerHTML = `Отправить <span id="oaSendCount">${n}</span>`;
+      runBtn.title = '';
+      runBtn.classList.remove('over-limit');
+    }
+  }
+
+  const noPhone = _oaGetBaseLeads().filter(l =>
+    !l.phone || phoneType(l.phone) !== 'mobile'
+  ).length;
+  const dupes = _oaCountDuplicates();
+  const parts = [];
+  if (noPhone) parts.push(`${noPhone} без мобильного`);
+  if (dupes)   parts.push(`${dupes} дублей по номеру`);
+  let line = parts.length ? parts.join(' · ') + ' — пропущены' : '';
+  const dailyLine = `Сегодня: ${sentToday}/${limit} (осталось ${remaining})`;
+  const note = document.getElementById('oaSkippedNote');
+  // Префикс — предупреждение если защита от двойной отправки выключена
+  const unlocked = config.idempotency_lock === false;
+  if (unlocked) {
+    note.innerHTML = `<span class="oa-warn-badge">⚠ Защита от двойной отправки ВЫКЛ</span> · ${esc(dailyLine)}${line ? ' · ' + esc(line) : ''}`;
+  } else {
+    note.textContent = line ? `${dailyLine} · ${line}` : dailyLine;
+  }
+}
+
+function oaToggleLead(id, row) {
+  if (_oaSelectedIds.has(id)) {
+    _oaSelectedIds.delete(id);
+    row.classList.remove('oa-checked');
+    row.querySelector('input').checked = false;
+  } else {
+    _oaSelectedIds.add(id);
+    row.classList.add('oa-checked');
+    row.querySelector('input').checked = true;
+  }
+  _oaUpdateCount();
+  updateOaPreview();
+}
+
+function oaSelectAll(val) {
+  _oaGetPool().forEach(l =>
+    val ? _oaSelectedIds.add(String(l.id)) : _oaSelectedIds.delete(String(l.id))
+  );
+  _oaRenderLeads();
+  updateOaPreview();
+}
+
+
+function oaInsertVar(v) {
+  const ta = document.getElementById('outreachMessage');
+  const s = ta.selectionStart, e2 = ta.selectionEnd;
+  ta.value = ta.value.slice(0, s) + v + ta.value.slice(e2);
+  ta.selectionStart = ta.selectionEnd = s + v.length;
+  ta.focus();
+  updateOaPreview();
+}
+
+// Индекс лида, для которого сейчас рендерится превью.
+// Меняется кнопками < / > в шапке превью.
+let _oaPreviewIndex = 0;
+
+function _oaSelectedList() {
+  return _oaGetPool().filter(l => _oaSelectedIds.has(String(l.id)));
+}
+
+function _oaRenderTemplate(template, lead) {
+  return template
+    .replace(/{{name}}/g,     firstName(lead.director))
+    .replace(/{{director}}/g, lead.director || '')
+    .replace(/{{company}}/g,  lead.company  || '')
+    .replace(/{{vacancy}}/g,  lead.vacancy  || '')
+    .replace(/{{city}}/g,     lead.city     || '');
+}
+
+// Проверяет используется ли переменная в шаблоне и у скольких лидов она пустая
+function _oaCheckMissing(template, selected) {
+  const vars = [
+    { name: '{{name}}',     get: l => firstName(l.director) },
+    { name: '{{director}}', get: l => l.director },
+    { name: '{{company}}',  get: l => l.company  },
+    { name: '{{vacancy}}',  get: l => l.vacancy  },
+    { name: '{{city}}',     get: l => l.city     },
+  ];
+  const missing = [];
+  for (const v of vars) {
+    if (!template.includes(v.name)) continue;
+    const empty = selected.filter(l => !v.get(l)).length;
+    if (empty > 0) missing.push({ name: v.name, empty });
+  }
+  return missing;
+}
+
+function oaPreviewPrev() {
+  const list = _oaSelectedList();
+  if (list.length === 0) return;
+  _oaPreviewIndex = (_oaPreviewIndex - 1 + list.length) % list.length;
+  updateOaPreview();
+}
+function oaPreviewNext() {
+  const list = _oaSelectedList();
+  if (list.length === 0) return;
+  _oaPreviewIndex = (_oaPreviewIndex + 1) % list.length;
+  updateOaPreview();
+}
+
+function updateOaPreview() {
+  const section = document.getElementById('oaPreviewSection');
+  const box     = document.getElementById('oaPreviewBox');
+  const forEl   = document.getElementById('oaPreviewFor');
+  const navEl   = document.getElementById('oaPreviewNav');
+  const warnEl  = document.getElementById('oaPreviewWarn');
+  const counterEl = document.getElementById('oaCharCounter');
+  const msg     = (document.getElementById('outreachMessage').value || '').trim();
+
+  // Счётчик символов (показывает длину шаблона, не отрендеренного сообщения —
+  // конкретное сообщение всё равно зависит от лида)
+  if (counterEl) {
+    const len = msg.length;
+    counterEl.textContent = `${len} симв.`;
+    counterEl.className = 'oa-char-counter' + (len > 1000 ? ' warn' : '');
+  }
+
+  if (!msg) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  const selected = _oaSelectedList();
+  if (selected.length === 0) {
+    box.textContent = msg;
+    forEl.textContent = ''; navEl.textContent = ''; warnEl.textContent = '';
+    return;
+  }
+
+  if (_oaPreviewIndex >= selected.length) _oaPreviewIndex = 0;
+  const lead = selected[_oaPreviewIndex];
+
+  box.textContent = _oaRenderTemplate(msg, lead);
+  forEl.textContent = `для: ${lead.company || lead.phone}`;
+  navEl.textContent = `${_oaPreviewIndex + 1} / ${selected.length}`;
+
+  // Предупреждения о пустых переменных у всей выборки
+  const missing = _oaCheckMissing(msg, selected);
+  if (missing.length === 0) {
+    warnEl.textContent = '';
+    warnEl.style.display = 'none';
+  } else {
+    warnEl.style.display = '';
+    warnEl.innerHTML = missing.map(m =>
+      `<span class="oa-warn-pill">${m.name}: ${m.empty} лидов без данных</span>`
+    ).join(' ');
+  }
+}
+
+function openOutreachModal() {
+  if (!config.wh_outreach) {
+    toast('Сначала укажи webhook рассылки в настройках ⚙', true);
+    return;
+  }
+
+  // По умолчанию пресекаем все валидные лиды
+  _oaSelectedIds = new Set(_oaGetPool().map(l => String(l.id)));
+  _oaPreviewIndex = 0;   // превью с первого лида
+  _oaRenderLeads();
+
+  const ta = document.getElementById('outreachMessage');
+  if (!ta.value) ta.value = OUTREACH_DEFAULT_MSG;
+
+  updateOaPreview();
+  document.getElementById('outreachModal').classList.add('open');
+}
+
+function closeOutreachModal() {
+  document.getElementById('outreachModal').classList.remove('open');
+}
+
+document.getElementById('outreachModal').addEventListener('click', e => {
+  if (e.target.id === 'outreachModal') closeOutreachModal();
+});
+
+
+async function runOutreach() {
+  if (_oaSelectedIds.size === 0) {
+    toast('Выбери хотя бы одного получателя', true);
+    return;
+  }
+
+  const messageTemplate = document.getElementById('outreachMessage').value.trim();
+  if (!messageTemplate) { toast('Введи текст сообщения', true); return; }
+
+  // Жёсткий гейт на дневной лимит — даже если кнопка не была disabled из-за лагов рендера.
+  const limit = _waDailyLimit();
+  const sentToday = _countSentToday();
+  const remaining = Math.max(0, limit - sentToday);
+  if (_oaSelectedIds.size > remaining) {
+    toast(`Превышен дневной лимит. Сегодня уже ${sentToday}/${limit}, осталось ${remaining}.`, true);
+    return;
+  }
+
+  const leads = _oaGetPool()
+    .filter(l => _oaSelectedIds.has(String(l.id)))
+    .map(l => ({
+      id:      String(l.id),
+      phone:   l.phone,
+      company: l.company  || '',
+      director:l.director || '',
+      vacancy: l.vacancy  || '',
+      message: messageTemplate
+        .replace(/{{name}}/g,     firstName(l.director))
+        .replace(/{{director}}/g, l.director || '')
+        .replace(/{{company}}/g,  l.company  || '')
+        .replace(/{{vacancy}}/g,  l.vacancy  || '')
+        .replace(/{{city}}/g,     l.city     || ''),
+    }));
+
+  const btn = document.getElementById('outreachRunBtn');
+  const origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<svg class="spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Отправляю...`;
+
+  try {
+    const res = await fetch(config.wh_outreach, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // force=true означает "выключить idempotency-защиту" на бэке.
+      // Это управляется тумблером в Settings: idempotency_lock включён → force=false.
+      body: JSON.stringify({ leads, force: config.idempotency_lock === false }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json().catch(() => ({}));
+    const sent   = data.sent   ?? leads.length;
+    const errors = data.errors ?? 0;
+    toast(`✅ Отправлено: ${sent}${errors ? `, ошибок: ${errors}` : ''}`, 'success');
+    closeOutreachModal();
+    setTimeout(() => fetchLeads({ showSkeleton: false, preserveScroll: true }), 5000);
+  } catch (e) {
+    toast('Ошибка: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+  }
+}
+
 document.getElementById('refreshBtn').addEventListener('click', triggerRefresh);
 
 /* =========================================================================
@@ -1682,6 +2705,8 @@ function render() {
       updateRubricFilter();
       if (gen !== _renderGeneration) return;
       updateStatusFilter();
+      if (gen !== _renderGeneration) return;
+      updatePillCounts();
     });
   });
 }
@@ -1721,7 +2746,7 @@ function rowHtml(l) {
       </td>
       <td data-action="open">
         <div class="cell">
-          ${l.phone   ? `<div class="contact-row"><span class="icon">☏</span><span class="copyable mono" data-copy="${esc(l.phone)}">${esc(l.phone)}</span>${waIconHtml(l.phone)}</div>` : ''}
+          ${l.phone   ? `<div class="contact-row"><span class="icon">☏</span><span class="copyable mono" data-copy="${esc(l.phone)}" title="Скопировать">${esc(formatPhonePretty(l.phone))}</span>${waIconHtml(l.phone)}</div>` : ''}
           ${l.email   ? `<div class="contact-row"><span class="icon">@</span><span class="copyable" data-copy="${esc(l.email)}">${esc(l.email)}</span></div>` : ''}
           ${l.website ? `<div class="contact-row"><span class="icon">↗</span><a href="${esc(normUrl(l.website))}" target="_blank" class="website-link" data-stop="1">${esc(l.website)}</a></div>` : ''}
           ${(!l.phone && !l.email && !l.website) ? '<span class="dash">—</span>' : ''}
@@ -1743,10 +2768,10 @@ function rowHtml(l) {
       <td>
         <div class="cell cell-status">
           <select class="status-select status-${l.status || 'new'}" data-id="${sidEsc}" data-stop="1">
-            <option value="new"         ${l.status === 'new'         ? 'selected' : ''}>Новый</option>
-            <option value="in_progress" ${l.status === 'in_progress' ? 'selected' : ''}>В работе</option>
-            <option value="contacted"   ${l.status === 'contacted'   ? 'selected' : ''}>Связались</option>
-            <option value="skip"        ${l.status === 'skip'        ? 'selected' : ''}>Пропустить</option>
+            <option value="new"   ${l.status === 'new'   ? 'selected' : ''}>Новый</option>
+            <option value="sent"  ${l.status === 'sent'  ? 'selected' : ''}>Отправлено ✅</option>
+            <option value="error" ${l.status === 'error' ? 'selected' : ''}>Ошибка ⚠</option>
+            <option value="dnc"   ${l.status === 'dnc'   ? 'selected' : ''}>⛔ Не писать</option>
           </select>
         </div>
       </td>
@@ -1760,6 +2785,12 @@ function onStatusChange(sel) {
   const lead = allLeads.find(l => String(l.id) === String(id));
   if (lead) lead.status = status;
   updateStatus(id, status);
+  // BUG FIX: инвалидируем кеш и обновляем статистику/дропдауны.
+  // Раньше карточки «В работе», «Отправлено WA» и счётчики в фильтрах
+  // не обновлялись после ручной смены статуса.
+  _allLeadsVersion++;
+  updateStats();
+  requestAnimationFrame(() => updateStatusFilter());
 }
 function renderSources(l) {
   let lprUrl = null;
@@ -1772,18 +2803,48 @@ function renderSources(l) {
     kgd: { label: 'ЛПР',  url: lprUrl },
   };
   const sources = Array.isArray(l.sources) ? l.sources : [];
+  // Белый список безопасных CSS-классов — не пускаем неизвестные source-имена в class=""
+  const SAFE_CLASSES = new Set(['hh', 'gis', 'lpr']);
   return sources.map(s => {
     const m = meta[s] || { label: s, url: null };
-    const cls = s === 'kgd' ? 'lpr' : s;
+    const rawCls = s === 'kgd' ? 'lpr' : s;
+    const cls = SAFE_CLASSES.has(rawCls) ? rawCls : '';
+    const label = esc(m.label);
     return m.url
-      ? `<a href="${esc(m.url)}" target="_blank" onclick="event.stopPropagation()" class="source-badge ${cls}">${m.label} ↗</a>`
-      : `<span class="source-badge ${cls}">${m.label}</span>`;
+      ? `<a href="${esc(m.url)}" target="_blank" onclick="event.stopPropagation()" class="source-badge ${cls}">${label} ↗</a>`
+      : `<span class="source-badge ${cls}">${label}</span>`;
   }).join('');
 }
 
 /* =========================================================================
    DETAILS DRAWER
    ========================================================================= */
+// Делегированный обработчик копирования для всего drawer body.
+// Нужен потому, что inline onclick="copyToClipboard('...')" ломается, если
+// в данных встречается одинарная кавычка (например, фамилия O'Reilly):
+// esc() переводит ' в &#39;, но HTML-декодер браузера возвращает ' до парсинга JS,
+// и onclick становится синтаксически невалидным.
+(function setupDrawerDelegation() {
+  const body = document.getElementById('drawerBody');
+  if (body) {
+    body.addEventListener('click', e => {
+      const el = e.target.closest('[data-copy]');
+      if (!el) return;
+      e.stopPropagation();
+      copyToClipboard(el.dataset.copy);
+    });
+  }
+  // Кнопки быстрой смены статуса в footer drawer'а
+  const actions = document.getElementById('drawerActions');
+  if (actions) {
+    actions.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-quick-status]');
+      if (!btn || btn.disabled) return;
+      quickStatus(btn.dataset.id, btn.dataset.quickStatus);
+    });
+  }
+})();
+
 function openDrawer(id) {
   const lead = allLeads.find(l => String(l.id) === String(id));
   if (!lead) return;
@@ -1816,9 +2877,9 @@ function openDrawer(id) {
         Контакты
       </div>
       <div class="d-card-body">
-        ${lead.phone ? drow('Телефон', `<span class="copyable mono" onclick="copyToClipboard('${esc(lead.phone)}')">${esc(lead.phone)}</span>${waIconHtml(lead.phone)}`) : ''}
+        ${lead.phone ? drow('Телефон', `<span class="copyable mono" data-copy="${esc(lead.phone)}" title="Скопировать">${esc(formatPhonePretty(lead.phone))}</span>${waIconHtml(lead.phone)}`) : ''}
         ${renderExtraPhones(lead.phone_extra)}
-        ${lead.email ? drow('Email', `<span class="copyable" onclick="copyToClipboard('${esc(lead.email)}')">${esc(lead.email)}</span>`) : ''}
+        ${lead.email ? drow('Email', `<span class="copyable" data-copy="${esc(lead.email)}">${esc(lead.email)}</span>`) : ''}
         ${lead.website ? drow('Сайт', `<a href="${esc(normUrl(lead.website))}" target="_blank">${esc(lead.website)}</a>`) : ''}
         ${(!lead.phone && !lead.email && !lead.website) ? `<div class="d-row"><span class="d-value muted">Контакты не найдены — запусти 2GIS обогащение</span></div>` : ''}
       </div>
@@ -1832,9 +2893,9 @@ function openDrawer(id) {
       </div>
       <div class="d-card-body">
         ${lead.director
-          ? drow('ФИО', `<strong class="copyable" onclick="copyToClipboard('${esc(lead.director)}')" title="Скопировать ФИО">${esc(lead.director)}</strong>`) +
+          ? drow('ФИО', `<strong class="copyable" data-copy="${esc(lead.director)}" title="Скопировать ФИО">${esc(lead.director)}</strong>`) +
             (lead.director_position ? drow('Должность', esc(lead.director_position)) : '') +
-            (lead.bin ? drow('БИН', `<span class="copyable mono" onclick="copyToClipboard('${esc(lead.bin)}')" title="Скопировать">${esc(lead.bin)}</span>`) : '') +
+            (lead.bin ? drow('БИН', `<span class="copyable mono" data-copy="${esc(lead.bin)}" title="Скопировать">${esc(lead.bin)}</span>`) : '') +
             (lprUrl ? drow('Реестр', `<a href="${esc(lprUrl)}" target="_blank">ba.prg.kz ↗</a>`) : '')
           : `<div class="d-row"><span class="d-value muted">Не найден — запусти поиск ЛПР</span></div>`}
       </div>
@@ -1872,13 +2933,24 @@ function openDrawer(id) {
   // Инициализируем textarea для заметок и подключаем autosave
   setupNotesEditor(lead);
 
-  // Status quick-change buttons
+  // Status quick-change — контекстная кнопка под текущий статус.
+  // new      → «⛔ Не писать»  (бан)
+  // dnc      → «↶ Вернуть»     (разбан)
+  // sent/err → ничего           (терминальные — менять только через select)
   const actions = document.getElementById('drawerActions');
-  actions.innerHTML = `
-    <button onclick="quickStatus('${esc(lead.id)}','in_progress')" ${lead.status === 'in_progress' ? 'disabled' : ''}>В работу</button>
-    <button onclick="quickStatus('${esc(lead.id)}','contacted')" ${lead.status === 'contacted' ? 'disabled' : ''}>Связались</button>
-    <button onclick="quickStatus('${esc(lead.id)}','skip')" ${lead.status === 'skip' ? 'disabled' : ''}>Пропустить</button>
-  `;
+  const idEsc = esc(lead.id);
+  let actionsHtml = '';
+  if (lead.status === 'new' || lead.status === undefined || lead.status === null) {
+    actionsHtml = `<button data-quick-status="dnc" data-id="${idEsc}" class="red-action">⛔ Не писать</button>`;
+  } else if (lead.status === 'dnc') {
+    actionsHtml = `<button data-quick-status="new" data-id="${idEsc}">↶ Вернуть в "Новый"</button>`;
+  } else {
+    // sent / error — терминальные, оставляем footer с подсказкой
+    actionsHtml = `<span style="color:var(--text-muted);font-size:12.5px;flex:1;text-align:center;">
+      Статус: ${esc(STATUS_LABELS[lead.status] || lead.status)}. Меняй через селект в строке если нужно.
+    </span>`;
+  }
+  actions.innerHTML = actionsHtml;
 
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawerOverlay').classList.add('open');
@@ -1981,10 +3053,6 @@ function closeDrawer() {
   document.getElementById('drawerOverlay').classList.remove('open');
   document.querySelectorAll('#leadsBody tr').forEach(tr => tr.classList.remove('opened'));
 }
-function field(label, value) {
-  if (!value) return '';
-  return `<div class="drawer-field"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`;
-}
 // drow: строка в d-card — лейбл слева, значение справа
 function drow(label, valueHtml) {
   return `<div class="d-row"><span class="d-label">${esc(label)}</span><span class="d-value">${valueHtml}</span></div>`;
@@ -1996,7 +3064,7 @@ function renderExtraPhones(phoneExtra) {
   if (!phoneExtra) return '';
   const phones = String(phoneExtra).split(',').map(s => s.trim()).filter(Boolean);
   return phones.map(p =>
-    drow('Доп. тел.', `<span class="copyable mono" onclick="copyToClipboard('${esc(p)}')">${esc(p)}</span>${waIconHtml(p)}`)
+    drow('Доп. тел.', `<span class="copyable mono" data-copy="${esc(p)}" title="Скопировать">${esc(formatPhonePretty(p))}</span>${waIconHtml(p)}`)
   ).join('');
 }
 async function quickStatus(id, status) {
@@ -2004,6 +3072,7 @@ async function quickStatus(id, status) {
   if (lead) lead.status = status;
   await updateStatus(id, status);
   toast(`Статус: ${STATUS_LABELS[status]}`, 'success');
+  _allLeadsVersion++;   // инвалидируем кеш фильтров
   render();
   openDrawer(id); // refresh drawer actions state
   fetchStats();
@@ -2015,7 +3084,10 @@ async function quickStatus(id, status) {
 // Кеш leadsExcluding — пересчитываем только при смене фильтров
 let _excludingCache = {};
 let _excludingFiltersSnapshot = '';
-let _excludingLeadsCount = -1; // отслеживаем изменение allLeads
+let _excludingLeadsCount = -1;    // отслеживаем изменение длины allLeads
+let _excludingLeadsVersion = -1;  // BUG FIX: отслеживаем изменение СОДЕРЖИМОГО
+                                  // (смена статуса не меняет длину, но должна
+                                  //  инвалидировать счётчики в дропдаунах)
 
 function _getExcludingCacheKey() {
   return JSON.stringify({ s: filters.search, p: filters.position, c: filters.city,
@@ -2024,11 +3096,14 @@ function _getExcludingCacheKey() {
 
 function leadsExcludingCached(skip) {
   const snap = _getExcludingCacheKey();
-  // Сбрасываем кеш если изменились фильтры ИЛИ обновился массив лидов
-  if (snap !== _excludingFiltersSnapshot || _excludingLeadsCount !== allLeads.length) {
+  // BUG FIX: сбрасываем кеш если изменились фильтры, длина ИЛИ версия данных
+  if (snap !== _excludingFiltersSnapshot
+    || _excludingLeadsCount   !== allLeads.length
+    || _excludingLeadsVersion !== _allLeadsVersion) {
     _excludingCache = {};
     _excludingFiltersSnapshot = snap;
-    _excludingLeadsCount = allLeads.length;
+    _excludingLeadsCount   = allLeads.length;
+    _excludingLeadsVersion = _allLeadsVersion;
   }
   if (!_excludingCache[skip]) {
     _excludingCache[skip] = leadsExcluding(skip);
@@ -2053,18 +3128,21 @@ function matchesFilter(l, key) {
     case 'rubric':   return !filters.rubric   || l.rubric   === filters.rubric;
     case 'status':   return !filters.status   || l.status   === filters.status;
     case 'has': {
-      const h = filters.has;
-      if (!h) return true;
-      if (h === 'phone')    return !!l.phone;
-      if (h === 'email')    return !!l.email;
-      if (h === 'director') return !!l.director;
-      if (h === 'no_lpr')   return !l.director;
-      if (h === 'no_contacts') return !(l.phone || l.email || l.website);
-      if (h === 'whatsapp') {
-        const all = [l.phone, ...(l.phone_extra ? String(l.phone_extra).split(',') : [])];
-        return all.some(p => phoneType(p) === 'mobile');
-      }
-      return true;
+      const arr = Array.isArray(filters.has) ? filters.has : (filters.has ? [filters.has] : []);
+      if (arr.length === 0) return true;
+      const checkOne = h => {
+        if (h === 'phone')    return !!l.phone;
+        if (h === 'email')    return !!l.email;
+        if (h === 'director') return !!l.director;
+        if (h === 'no_lpr')   return !l.director;
+        if (h === 'no_contacts') return !(l.phone || l.email || l.website);
+        if (h === 'whatsapp') {
+          const all = [l.phone, ...(l.phone_extra ? String(l.phone_extra).split(',') : [])];
+          return all.some(p => phoneType(p) === 'mobile');
+        }
+        return true;
+      };
+      return arr.every(checkOne);   // AND
     }
     case 'date': {
       if (!filters.date) return true;
@@ -2086,7 +3164,10 @@ function makeFastPredicate(skip) {
   const city   = skip !== 'city'     ? filters.city     : '';
   const rubric = skip !== 'rubric'   ? filters.rubric   : '';
   const status = skip !== 'status'   ? filters.status   : '';
-  const has    = skip !== 'has'      ? filters.has      : '';
+  // filters.has — массив активных contact-pills, AND-логика между ними
+  const hasArr = skip !== 'has'
+    ? (Array.isArray(filters.has) ? filters.has : (filters.has ? [filters.has] : []))
+    : [];
   const dateD  = skip !== 'date'     ? filters.date     : 0;
 
   // cutoff в виде ISO YYYY-MM-DD — сравнение строк быстрее Date()
@@ -2094,6 +3175,23 @@ function makeFastPredicate(skip) {
   if (dateD) {
     const c = new Date(); c.setDate(c.getDate() - dateD);
     cutoffStr = c.toISOString().slice(0, 10);
+  }
+
+  // Локальный матчер одного has-условия. Вынесен из горячего цикла как функция,
+  // но JS-движок их обычно инлайнит для маленьких функций.
+  function _matchHas(l, h) {
+    if (h === 'phone')        return !!l.phone;
+    if (h === 'email')        return !!l.email;
+    if (h === 'director')     return !!l.director;
+    if (h === 'no_lpr')       return !l.director;
+    if (h === 'no_contacts')  return !(l.phone || l.email || l.website);
+    if (h === 'whatsapp') {
+      const all = l.phone_extra
+        ? [l.phone, ...String(l.phone_extra).split(',')]
+        : [l.phone];
+      return all.some(p => phoneType(p) === 'mobile');
+    }
+    return true;   // неизвестный has — игнорируем
   }
 
   return function(l) {
@@ -2104,18 +3202,9 @@ function makeFastPredicate(skip) {
     if (cutoffStr) {
       if (!l.posted || l.posted < cutoffStr) return false;
     }
-    if (has) {
-      if (has === 'phone'    && !l.phone)    return false;
-      else if (has === 'email'    && !l.email)    return false;
-      else if (has === 'director' && !l.director) return false;
-      else if (has === 'no_lpr'   && l.director)  return false;
-      else if (has === 'no_contacts' && (l.phone || l.email || l.website)) return false;
-      else if (has === 'whatsapp') {
-        const all = l.phone_extra
-          ? [l.phone, ...String(l.phone_extra).split(',')]
-          : [l.phone];
-        if (!all.some(p => phoneType(p) === 'mobile')) return false;
-      }
+    // AND по всем активным contact-pills
+    for (let i = 0; i < hasArr.length; i++) {
+      if (!_matchHas(l, hasArr[i])) return false;
     }
     if (useSearch) {
       const catLabel = CATEGORY_META[l.category]?.label || '';
@@ -2166,10 +3255,10 @@ function updateStatusFilter() {
   const current = select.value;
   const pool = leadsExcludingCached('status');
   const STATUS = [
-    { value: 'new',         label: 'Новые' },
-    { value: 'in_progress', label: 'В работе' },
-    { value: 'contacted',   label: 'Связались' },
-    { value: 'skip',        label: 'Пропустить' },
+    { value: 'new',   label: 'Новые' },
+    { value: 'sent',  label: 'Отправлено ✅' },
+    { value: 'error', label: 'Ошибка ⚠' },
+    { value: 'dnc',   label: '⛔ Не писать' },
   ];
   const counts = {};
   for (const l of pool) counts[l.status || 'new'] = (counts[l.status || 'new'] || 0) + 1;
@@ -2183,6 +3272,46 @@ function updateStatusFilter() {
   }
   select.innerHTML = html;
 }
+// Счётчики на pills учитывают мульти-выбор:
+//   • активный pill   — показывает сколько лидов реально матчит ВСЕ выбранные pills сейчас
+//   • неактивный pill — «сколько останется, если этот pill добавить к текущей выборке»
+// Так оператор видит результат пересечения, а не абстрактный размер каждого среза.
+function updatePillCounts() {
+  const pool = leadsExcludingCached('has');
+  const activeHas = Array.isArray(filters.has) ? filters.has : (filters.has ? [filters.has] : []);
+
+  function matchOne(l, h) {
+    if (h === 'phone')        return !!l.phone;
+    if (h === 'email')        return !!l.email;
+    if (h === 'director')     return !!l.director;
+    if (h === 'no_lpr')       return !l.director;
+    if (h === 'no_contacts')  return !(l.phone || l.email || l.website);
+    if (h === 'whatsapp') {
+      const all = l.phone_extra ? [l.phone, ...String(l.phone_extra).split(',')] : [l.phone];
+      return all.some(p => phoneType(p) === 'mobile');
+    }
+    return true;
+  }
+
+  // Базовый набор — лиды, прошедшие все активные has-фильтры
+  const activeMatches = activeHas.length === 0
+    ? pool
+    : pool.filter(l => activeHas.every(h => matchOne(l, h)));
+
+  document.querySelectorAll('.cpill').forEach(btn => {
+    const key = btn.dataset.val;
+    const isActive = activeHas.includes(key);
+    // active pill → текущая выборка; inactive → пересечение с этим pill
+    const cnt = isActive
+      ? activeMatches.length
+      : activeMatches.filter(l => matchOne(l, key)).length;
+    const span = btn.querySelector('.pill-count');
+    if (span) span.textContent = cnt;
+    btn.classList.toggle('is-empty', cnt === 0 && !isActive);
+    btn.classList.toggle('cpill-active', isActive);   // sync DOM с filters.has
+  });
+}
+
 function updatePositionFilter() {
   const select = document.getElementById('filterPosition');
   const current = select.value;
@@ -2212,39 +3341,46 @@ function updateStats() {
   if (serverStats) {
     document.getElementById('statToday').textContent        = serverStats.today        ?? 0;
     document.getElementById('statWeek').textContent         = serverStats.week         ?? 0;
-    document.getElementById('statInProgress').textContent   = serverStats.in_progress  ?? 0;
+    document.getElementById('statToSend').textContent       = serverStats.to_send      ?? serverStats.in_progress ?? 0;
     document.getElementById('statTotal').textContent        = serverStats.total        ?? 0;
     document.getElementById('statWithPhone').textContent    = serverStats.with_phone    ?? 0;
     document.getElementById('statWithDirector').textContent = serverStats.with_director ?? 0;
+    document.getElementById('statSent').textContent         = serverStats.sent         ?? 0;
+    document.getElementById('statReplied').textContent      = serverStats.replied      ?? 0;
     return;
   }
-  // Один проход вместо пяти filter() — критично на больших данных
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0, 10);
-  let cToday=0, cWeek=0, cInProgress=0, cPhone=0, cDirector=0;
+  let cToday=0, cWeek=0, cToSend=0, cPhone=0, cDirector=0, cSent=0, cReplied=0;
   for (const l of allLeads) {
     if (l.posted === today) cToday++;
     if (l.posted >= weekAgo) cWeek++;
-    if (l.status === 'in_progress') cInProgress++;
+    if (l.status === 'sent') cSent++;
+    if (l.replied_at) cReplied++;
     if (l.phone) cPhone++;
     if (l.director) cDirector++;
+    // «К отправке» = new + мобильный (то, что реально готово к рассылке)
+    if (l.status === 'new' && l.phone && phoneType(l.phone) === 'mobile') cToSend++;
   }
   document.getElementById('statToday').textContent        = cToday;
   document.getElementById('statWeek').textContent         = cWeek;
-  document.getElementById('statInProgress').textContent   = cInProgress;
+  document.getElementById('statToSend').textContent       = cToSend;
   document.getElementById('statTotal').textContent        = allLeads.length;
   document.getElementById('statWithPhone').textContent    = cPhone;
   document.getElementById('statWithDirector').textContent = cDirector;
+  document.getElementById('statSent').textContent         = cSent;
+  const replyRate = cSent > 0 ? Math.round((cReplied / cSent) * 100) : 0;
+  document.getElementById('statReplied').textContent      = cSent > 0 ? `${cReplied} · ${replyRate}%` : cReplied;
 }
 function updateSortIndicators() {
   document.querySelectorAll('th.sortable').forEach(th => {
     const arrow = th.querySelector('.sort-arrow');
     if (th.dataset.sort === sortState.column) {
       th.classList.add('active');
-      arrow.textContent = sortState.direction === 'asc' ? '↑' : '↓';
+      if (arrow) arrow.textContent = sortState.direction === 'asc' ? '↑' : '↓';
     } else {
       th.classList.remove('active');
-      arrow.textContent = '↕';
+      if (arrow) arrow.textContent = '↕';
     }
   });
 }
@@ -2253,7 +3389,7 @@ function setLastUpdate() {
   document.getElementById('lastUpdate').textContent = 'обновлено ' + t;
 }
 function resetFilters() {
-  filters = { search:'', position:'', city:'', rubric:'', status:'', has:'', date:7 };
+  filters = { search:'', position:'', city:'', rubric:'', status:'', has:[], date:0 };
   document.getElementById('searchInput').value = '';
   document.getElementById('filterPosition').value = '';
   document.getElementById('filterCity').value = '';
@@ -2261,9 +3397,8 @@ function resetFilters() {
   document.getElementById('filterStatus').value = '';
   document.querySelectorAll('.cpill').forEach(b => b.classList.remove('cpill-active'));
   document.querySelectorAll('.dpill').forEach(b => b.classList.remove('dpill-active'));
-  const weekBtn = document.querySelector('.dpill[data-days="7"]');
-  if (weekBtn) weekBtn.classList.add('dpill-active');
-  filters.date = 7;
+  const allBtn = document.querySelector('.dpill[data-days="0"]');
+  if (allBtn) allBtn.classList.add('dpill-active');
   render();
 }
 
@@ -2277,6 +3412,8 @@ function resetFilters() {
    Один listener на tbody вместо тысяч inline onclick/onchange в каждой
    строке. Критично для Safari: парсинг inline JS-атрибутов в больших таблицах
    тормозит первый клик. */
+let _lastCheckedRowId = null;   // якорь для shift+click range-select
+
 function setupTableDelegation() {
   const tbody = document.getElementById('leadsBody');
   if (!tbody || tbody.dataset.delegated === '1') return;
@@ -2285,11 +3422,28 @@ function setupTableDelegation() {
   // Клик: чекбокс, копирование, статус, открытие drawer
   tbody.addEventListener('click', e => {
     const target = e.target;
-    // Любой клик внутри элемента с data-stop — игнорируется (ссылки, селект)
     if (target.closest('[data-stop]')) return;
-    // Чекбокс — обработается отдельно на 'change', клик не должен открывать drawer
+
+    // Shift+click на чекбоксе — выделение диапазона от прошлого якоря
     if (target.classList.contains('row-check')) {
       e.stopPropagation();
+      if (e.shiftKey && _lastCheckedRowId !== null) {
+        e.preventDefault();
+        const rows = [...document.querySelectorAll('#leadsBody tr[data-id]')];
+        const startIdx = rows.findIndex(r => r.dataset.id === _lastCheckedRowId);
+        const endIdx   = rows.findIndex(r => r.dataset.id === target.dataset.id);
+        if (startIdx !== -1 && endIdx !== -1) {
+          const [a, b] = startIdx <= endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+          for (let i = a; i <= b; i++) {
+            const cb = rows[i].querySelector('.row-check');
+            if (cb && !cb.checked) {
+              cb.checked = true;
+              toggleSelection(cb.dataset.id, true);
+            }
+          }
+          _lastCheckedRowId = target.dataset.id;
+        }
+      }
       return;
     }
     // Копирование
@@ -2299,7 +3453,7 @@ function setupTableDelegation() {
       e.stopPropagation();
       return;
     }
-    // Открытие drawer — на td с data-action="open"
+    // Открытие drawer
     const openTd = target.closest('td[data-action="open"]');
     if (openTd) {
       const tr = openTd.closest('tr');
@@ -2312,14 +3466,28 @@ function setupTableDelegation() {
     const target = e.target;
     if (target.classList.contains('row-check')) {
       toggleSelection(target.dataset.id, target.checked);
+      _lastCheckedRowId = target.dataset.id;   // обновляем якорь для shift+click
     } else if (target.classList.contains('status-select')) {
       onStatusChange(target);
     }
   });
 }
-document.getElementById('searchInput').addEventListener('input', debounce(e => {
-  filters.search = e.target.value; render();
-}, 300));
+document.getElementById('searchInput').addEventListener('input', e => {
+  // Кнопка × показывается мгновенно, фильтрация — с debounce'ом
+  const wrap = e.target.closest('.search-wrap');
+  if (wrap) wrap.classList.toggle('has-text', !!e.target.value);
+  _debouncedSearch(e.target.value);
+});
+const _debouncedSearch = debounce(v => { filters.search = v; render(); }, 300);
+
+function clearSearch() {
+  const inp = document.getElementById('searchInput');
+  inp.value = '';
+  inp.closest('.search-wrap').classList.remove('has-text');
+  filters.search = '';
+  render();
+  inp.focus();
+}
 document.getElementById('filterPosition').addEventListener('change', e => { filters.position = e.target.value; render(); });
 document.getElementById('filterCity').addEventListener('change', e => { filters.city = e.target.value; render(); });
 document.getElementById('filterRubric').addEventListener('change', e => { filters.rubric = e.target.value; render(); });
@@ -2327,9 +3495,14 @@ document.getElementById('filterStatus').addEventListener('change', e => { filter
 function toggleContactPill(el) {
   const val = el.dataset.val;
   const isActive = el.classList.contains('cpill-active');
-  document.querySelectorAll('.cpill').forEach(b => b.classList.remove('cpill-active'));
-  if (!isActive) el.classList.add('cpill-active');
-  filters.has = isActive ? '' : val;
+  if (!Array.isArray(filters.has)) filters.has = filters.has ? [filters.has] : [];
+  if (isActive) {
+    filters.has = filters.has.filter(v => v !== val);
+    el.classList.remove('cpill-active');
+  } else {
+    if (!filters.has.includes(val)) filters.has.push(val);
+    el.classList.add('cpill-active');
+  }
   render();
 }
 function toggleDatePill(el) {
@@ -2361,7 +3534,11 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (document.getElementById('settingsModal').classList.contains('open')) closeModal();
     else if (document.getElementById('parserModal').classList.contains('open')) closeParserModal();
+    else if (document.getElementById('funnelModal').classList.contains('open')) closeFunnelModal();
+    else if (document.getElementById('outreachModal').classList.contains('open')) closeOutreachModal();
     else if (document.getElementById('drawer').classList.contains('open')) closeDrawer();
+    // Если в поиске есть текст — Esc сначала чистит его, потом снимает выборку
+    else if (document.getElementById('searchInput').value) clearSearch();
     else if (selectedIds.size > 0) clearSelection();
   }
 });
@@ -2420,7 +3597,7 @@ function getMockData() {
       address: null, director: 'Жумабаев А. К.', director_position: 'Директор',
       bin: null, sources: ['hh', 'lpr'],
       hh_url: 'https://hh.kz/vacancy/3', gis_url: null,
-      posted: yesterday, status: 'in_progress' },
+      posted: yesterday, status: 'new' },
     { id: 4, company: 'SmartRetail', vacancy: 'Рекрутер',
       position_type: 'hr', city: 'Алматы', rubric: null,
       phone: '+7 700 555 1234', email: null, website: 'smartretail.kz',
