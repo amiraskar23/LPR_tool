@@ -1212,7 +1212,7 @@
 <header>
   <div class="brand">
     <h1>ЛПР<span class="dot">.</span>finder</h1>
-    <span class="subtitle">Внутренний инструмент · v8</span>
+    <span class="subtitle">Внутренний инструмент · v8.1</span>
   </div>
   <div class="header-actions">
     <span class="last-update"><span class="pulse"></span><span id="lastUpdate">никогда</span></span>
@@ -1494,7 +1494,7 @@
     <h2>Запустить парсинг</h2>
     <div class="parser-top-bar">
       <span class="parser-counter-badge">
-        Выбрано: <strong id="parserSelectedCount">0</strong> из 13
+        Выбрано: <strong id="parserSelectedCount">0</strong> из <span id="parserTotalQueries">15</span>
       </span>
       <div class="parser-top-bar-btns">
         <button class="parser-top-btn" onclick="parserSelectAllQueries(true)">Выбрать все</button>
@@ -1887,7 +1887,7 @@ function normalizeLead(l) {
   // detectCategory() — фолбэк ТОЛЬКО для строк, где БД вернула 'other' или пусто
   // (старые записи до миграции v2). Не используем как fallback по умолчанию,
   // чтобы не было расхождения с серверной классификацией.
-  const VALID_CATS = new Set(['fitness','clinic','edu','beauty','sales','signal']);
+  const VALID_CATS = new Set(['fitness','clinic','edu','beauty','tourism','sales','signal']);
   const dbCat = (l.category || '').toLowerCase().trim();
   const category = VALID_CATS.has(dbCat) ? dbCat
     : (dbCat === 'other' || dbCat === '') ? detectCategory(l.vacancy)
@@ -1912,6 +1912,7 @@ function detectCategory(vacancy) {
   if (/клиник|стоматолог|медицин.*центр|больниц|медцентр|поликлиник/.test(n)) return 'clinic';
   if (/онлайн.*школ|курс|академи|учеб|образован|edtech|преподавател|репетитор|обучени/.test(n)) return 'edu';
   if (/салон.*красот|бьюти|парикмахер|косметолог|маникюр|barber|nail/.test(n)) return 'beauty';
+  if (/тури[сз]м|турист|турагент|туроператор|путешеств|отел[ье]|гостиниц|hospitality|travel|экскурс/.test(n)) return 'tourism';
 
   // Tier 2 — Sales leadership
   if (/руководитель.*продаж|начальник.*продаж|роп|head\s+of\s+sales|sales\s+(director|head|lead)|коммерческий\s+директор|директор\s+по\s+продажам|sales\s+operations|crm.*менеджер/.test(n)) return 'sales';
@@ -1927,6 +1928,7 @@ const CATEGORY_META = {
   clinic:  { label: 'Клиники',               tier: 1, color: 'accent' },
   edu:     { label: 'Образование',           tier: 1, color: 'accent' },
   beauty:  { label: 'Бьюти',                 tier: 1, color: 'accent' },
+  tourism: { label: 'Туризм',                tier: 1, color: 'accent' },
   sales:   { label: 'Руководители продаж',   tier: 2, color: 'blue'   },
   signal:  { label: 'Сигналы роста',         tier: 3, color: 'amber'  },
   other:   { label: 'Другое',                tier: 0, color: 'dim'    },
@@ -2061,6 +2063,8 @@ const PARSING_QUERIES = [
   { id: 'clinic_admin',   label: 'Клиники — администраторы',           text: 'администратор клиника медицинский', pages: 2, tier: 1, category: 'clinic'  },
   { id: 'edu_curator',    label: 'Образование — кураторы и менеджеры', text: 'куратор учеников онлайн школа',     pages: 2, tier: 1, category: 'edu'     },
   { id: 'beauty_admin',   label: 'Бьюти — администраторы салонов',     text: 'администратор салон красоты',       pages: 1, tier: 1, category: 'beauty'  },
+  { id: 'tourism_manager',label: 'Туризм — менеджеры/турагенты',        text: 'менеджер по туризму',               pages: 2, tier: 1, category: 'tourism' },
+  { id: 'tourism_sales',  label: 'Туризм — продажи туров',              text: 'менеджер по продажам туров',        pages: 1, tier: 1, category: 'tourism' },
   // Tier 2 — Руководители продаж (любая отрасль)
   { id: 'rop',            label: 'РОП / Руководитель отдела продаж',   text: 'руководитель отдела продаж',        pages: 2, tier: 2, category: 'sales'   },
   { id: 'head_of_sales',  label: 'Head of Sales',                       text: 'head of sales',                     pages: 1, tier: 2, category: 'sales'   },
@@ -2074,7 +2078,7 @@ const PARSING_QUERIES = [
 ];
 
 const TIER_META = {
-  1: { label: '🎯 Тир 1 — Целевой ICP',          hint: 'Фитнес, клиники, образование, бьюти — прямые покупатели AI Closer', categories: ['fitness','clinic','edu','beauty'] },
+  1: { label: '🎯 Тир 1 — Целевой ICP',          hint: 'Фитнес, клиники, образование, бьюти, туризм — прямые покупатели AI Closer', categories: ['fitness','clinic','edu','beauty','tourism'] },
   2: { label: '💼 Тир 2 — Руководители продаж',  hint: 'РОП / коммерческие директора в любой индустрии',                   categories: ['sales']                          },
   3: { label: '📊 Тир 3 — Сигналы роста',        hint: 'Массовый найм, маркетинг, Customer Success — компании в стадии роста', categories: ['signal']                      },
 };
@@ -2144,11 +2148,13 @@ function parserUpdateSummary() {
   const selected = PARSING_QUERIES.filter(q => selectedParserIds.has(q.id));
   const pages = selected.reduce((s, q) => s + q.pages, 0);
   const countEl = document.getElementById('parserSelectedCount');
+  const totalQEl = document.getElementById('parserTotalQueries');
   const pagesEl = document.getElementById('parserPagesCount');
   const totalEl = document.getElementById('parserTotalCount');
-  if (countEl) countEl.textContent = selected.length;
-  if (pagesEl) pagesEl.textContent = pages;
-  if (totalEl) totalEl.textContent = (pages * 100).toLocaleString('ru');
+  if (countEl)  countEl.textContent = selected.length;
+  if (totalQEl) totalQEl.textContent = PARSING_QUERIES.length;   // динамика
+  if (pagesEl)  pagesEl.textContent = pages;
+  if (totalEl)  totalEl.textContent = (pages * 100).toLocaleString('ru');
   const runBtn = document.getElementById('parserRunBtn');
   if (runBtn) runBtn.disabled = selected.length === 0;
 }
@@ -2382,7 +2388,7 @@ function _funnelComputeRows() {
   // Для каждой категории: total / sent / replied / dnc / reply rate
   // sent  = был хоть одна отправка (status='sent' или есть replied_at — лид же ответил, значит писали)
   // replied = есть replied_at (точный сигнал от WA-inbound)
-  const cats = ['fitness', 'clinic', 'edu', 'beauty', 'sales', 'signal', 'other'];
+  const cats = ['fitness', 'clinic', 'edu', 'beauty', 'tourism', 'sales', 'signal', 'other'];
   const rows = cats.map(cat => {
     let total = 0, sent = 0, replied = 0, dnc = 0;
     for (const l of allLeads) {
@@ -3865,6 +3871,7 @@ function updatePositionFilter() {
     { value: 'clinic',  label: '🎯 Клиники' },
     { value: 'edu',     label: '🎯 Образование' },
     { value: 'beauty',  label: '🎯 Бьюти' },
+    { value: 'tourism', label: '🎯 Туризм' },
     { value: 'sales',   label: '💼 Руководители продаж' },
     { value: 'signal',  label: '📊 Сигналы роста' },
     { value: 'other',   label: 'Другое' },
