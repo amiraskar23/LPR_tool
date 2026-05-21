@@ -186,6 +186,46 @@
 
   /* ─── Filters ──────────────────────────────────────────────────────────── */
 
+  /* ─── Quick filter presets — ряд one-click шорткатов ──────────────────── */
+  .filters-presets {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background: linear-gradient(180deg, var(--accent-light) 0%, rgba(240,240,255,0.4) 100%);
+    border: 1px solid rgba(99,102,241,0.18);
+    border-radius: var(--radius-sm);
+  }
+  .filters-presets-label {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-right: 4px;
+  }
+  .preset-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    height: 28px; padding: 0 12px;
+    background: var(--surface); border: 1px solid var(--border-mid);
+    border-radius: 999px;
+    font-size: 12px; font-weight: 500; color: var(--text);
+    cursor: pointer; box-shadow: var(--shadow-xs);
+    transition: background 0.13s, border-color 0.13s, color 0.13s, transform 0.06s;
+  }
+  .preset-btn:hover {
+    background: var(--surface); border-color: var(--accent); color: var(--accent);
+  }
+  .preset-btn:active { transform: scale(0.97); }
+  .preset-btn.active {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+  }
+  .preset-btn.active .preset-count { color: rgba(255,255,255,0.9); }
+  .preset-count {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--text-muted); opacity: 0.85;
+    min-width: 2.2ch; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .preset-btn.is-empty { opacity: 0.5; }
+
   /* Ряд 1: поиск + dropdowns */
   .filters-row1 {
     display: flex; gap: 7px; align-items: center; margin-bottom: 8px;
@@ -502,6 +542,59 @@
     font-family: inherit; font-size: 13px; transition: border-color 0.14s, box-shadow 0.14s;
   }
   .modal input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+  /* ─── Settings modal — секции и свёртываемые блоки ──────────────────────── */
+  .settings-modal { max-width: 540px !important; }
+  /* На больших экранах modal'у даём прокрутку, чтобы webhook'и не вылезали */
+  .settings-modal { max-height: 86vh; overflow-y: auto; }
+  .settings-modal::-webkit-scrollbar { width: 6px; }
+  .settings-modal::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 4px; }
+
+  .settings-section { margin-bottom: 18px; }
+  .settings-section-title {
+    font-size: 10.5px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin-bottom: 10px;
+  }
+
+  /* Свёртываемый блок (native <details>) */
+  .settings-collapse {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-2); overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .settings-collapse > summary {
+    list-style: none;
+    cursor: pointer; user-select: none;
+    padding: 11px 14px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 500; color: var(--text);
+    transition: background 0.12s;
+  }
+  .settings-collapse > summary::-webkit-details-marker { display: none; }
+  .settings-collapse > summary::marker { display: none; content: ''; }
+  .settings-collapse > summary:hover { background: var(--surface-3); }
+  .settings-collapse-title { flex: 1; }
+  .settings-collapse-meta {
+    font-size: 11.5px; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .settings-collapse-chevron {
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+  }
+  .settings-collapse[open] > summary .settings-collapse-chevron {
+    transform: rotate(180deg);
+  }
+  .settings-collapse[open] > summary {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .settings-collapse-body {
+    padding: 14px;
+    background: var(--surface);
+  }
+  .settings-collapse-body .field:last-child { margin-bottom: 0; }
 
   /* ─── Toggle switch ──────────────────────────────────────────────────────
      ВАЖНО: внутри .modal все <label> получают display:block + uppercase из .modal label.
@@ -961,6 +1054,102 @@
   .oa-preview-controls {
     display: inline-flex; align-items: center; gap: 6px;
   }
+
+  /* ─── Generate button — широкая, выделенная ──────────────────────────── */
+  .oa-generate-bar {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, var(--accent-light) 0%, rgba(240,240,255,0.6) 100%);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .oa-generate-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px;
+    background: var(--accent); color: #fff;
+    border: 1px solid var(--accent); border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+    transition: background 0.14s, opacity 0.14s, transform 0.08s;
+    flex-shrink: 0;
+  }
+  .oa-generate-btn:hover { background: var(--accent-hover); }
+  .oa-generate-btn:active { transform: translateY(1px); }
+  .oa-generate-btn:disabled {
+    opacity: 0.55; cursor: not-allowed;
+    background: var(--accent); transform: none;
+  }
+  .oa-generate-btn .spin { animation: spin 0.75s linear infinite; }
+  .oa-generate-status {
+    font-size: 12px; color: var(--text-mid); line-height: 1.4;
+    font-family: 'IBM Plex Sans', sans-serif;
+    flex: 1; min-width: 0;
+  }
+  .oa-generate-status.success { color: var(--green); }
+  .oa-generate-status.error   { color: var(--red); }
+
+  /* ─── Preview header — бейдж рядом с навигацией ─────────────────────── */
+  .oa-preview-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 8px; flex-wrap: wrap;
+  }
+  .oa-preview-head-left {
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+  }
+  .oa-preview-head-right {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+
+  /* Source badges (inline в шапке) */
+  .oa-preview-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0;
+  }
+  .oa-preview-badge.template { background: var(--surface-2); color: var(--text-mid); border: 1px solid var(--border); }
+  .oa-preview-badge.ai       { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(99,102,241,0.35); }
+  .oa-preview-badge.edited   { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-border); }
+  .oa-preview-badge.fallback { background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); }
+
+  /* ─── Editable preview textarea ────────────────────────────────────── */
+  .oa-preview-edit {
+    width: 100%; min-height: 150px; padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-mid); border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit; font-size: 13.5px; line-height: 1.6;
+    resize: vertical; white-space: pre-wrap;
+    transition: border-color 0.14s, box-shadow 0.14s, background 0.14s;
+    box-shadow: var(--shadow-xs);
+  }
+  .oa-preview-edit:hover { border-color: var(--accent); }
+  .oa-preview-edit:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    background: var(--surface);
+  }
+
+  /* ─── Actions row под textarea ─────────────────────────────────────── */
+  .oa-preview-actions {
+    display: flex; align-items: center; gap: 6px; margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .oa-preview-action-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; font-size: 12px; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--border-mid);
+    border-radius: var(--radius-sm); color: var(--text-mid);
+    cursor: pointer; box-shadow: none;
+    transition: all 0.12s;
+  }
+  .oa-preview-action-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-mid); }
+  .oa-preview-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .oa-preview-edit-hint {
+    font-size: 11.5px; color: var(--text-muted);
+    margin-left: auto; line-height: 1.4;
+  }
   .oa-nav-btn {
     width: 22px; height: 22px; padding: 0;
     background: var(--surface-2); border: 1px solid var(--border-mid);
@@ -1003,6 +1192,12 @@
     border: 1px solid var(--amber-border); border-radius: 999px;
     font-weight: 600; font-size: 11.5px;
   }
+  .oa-ai-badge {
+    display: inline-block; padding: 2px 8px;
+    background: var(--accent-light); color: var(--accent);
+    border: 1px solid rgba(99,102,241,0.4); border-radius: 999px;
+    font-weight: 600; font-size: 11.5px;
+  }
   /* Кнопка "Отправить" когда выборка превышает дневной лимит — янтарная, чтобы видно */
   #outreachRunBtn.over-limit {
     background: var(--amber); border-color: var(--amber); color: #fff;
@@ -1017,7 +1212,7 @@
 <header>
   <div class="brand">
     <h1>ЛПР<span class="dot">.</span>finder</h1>
-    <span class="subtitle">Внутренний инструмент · v5.3</span>
+    <span class="subtitle">Внутренний инструмент · v8</span>
   </div>
   <div class="header-actions">
     <span class="last-update"><span class="pulse"></span><span id="lastUpdate">никогда</span></span>
@@ -1072,6 +1267,23 @@
       <div class="stat-label">Откликнулись</div>
       <div class="stat-value" id="statReplied">—</div>
     </div>
+  </div>
+
+  <!-- Quick-Presets: one-click фильтр-комбинации для частых сценариев -->
+  <div class="filters-presets">
+    <span class="filters-presets-label">⚡ Быстрые фильтры:</span>
+    <button class="preset-btn" data-preset="sales_ready" onclick="applyPreset('sales_ready')" title="Руководители продаж (sales) + WhatsApp + ЛПР найден + status=new">
+      🎯 РОПы готовы <span class="preset-count" data-c="sales_ready">—</span>
+    </button>
+    <button class="preset-btn" data-preset="icp_ready" onclick="applyPreset('icp_ready')" title="Любая ICP-категория + WhatsApp + ЛПР + new (для рассылки)">
+      💬 Все WA + ЛПР <span class="preset-count" data-c="icp_ready">—</span>
+    </button>
+    <button class="preset-btn" data-preset="need_lpr" onclick="applyPreset('need_lpr')" title="Есть телефон, нет ЛПР — кандидаты на запуск find-lpr">
+      📞 Нужен ЛПР <span class="preset-count" data-c="need_lpr">—</span>
+    </button>
+    <button class="preset-btn" data-preset="no_reply" onclick="applyPreset('no_reply')" title="Отправлено, но не ответили — для follow-up">
+      📤 Без ответа <span class="preset-count" data-c="no_reply">—</span>
+    </button>
   </div>
 
   <!-- Ряд 1: поиск + выпадающие фильтры -->
@@ -1187,55 +1399,87 @@
 
 <!-- Settings modal -->
 <div class="modal-overlay" id="settingsModal">
-  <div class="modal">
+  <div class="modal settings-modal">
     <h2>Настройки</h2>
-    <div class="field">
-      <label>GET — список лидов</label>
-      <input type="text" id="wh_leads" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>POST — запустить парсинг</label>
-      <input type="text" id="wh_refresh" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>POST — обновить статус</label>
-      <input type="text" id="wh_status" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>GET — статистика</label>
-      <input type="text" id="wh_stats" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>POST — обогатить через 2GIS</label>
-      <input type="text" id="wh_enrich" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>POST — найти ЛПР</label>
-      <input type="text" id="wh_lpr_input" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>POST — сохранить заметку</label>
-      <input type="text" id="wh_note_input" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>POST — запустить рассылку WhatsApp</label>
-      <input type="text" id="wh_outreach_input" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>Дневной лимит WA-отправок (защита от бана)</label>
-      <input type="number" id="wa_daily_limit_input" min="1" max="1000" placeholder="80">
+
+    <!-- Часто меняемые — на виду -->
+    <div class="settings-section">
+      <div class="settings-section-title">Рассылка</div>
+
+      <div class="field">
+        <label>Дневной лимит WA-отправок (защита от бана)</label>
+        <input type="number" id="wa_daily_limit_input" min="1" max="1000" placeholder="80">
+      </div>
+
+      <div class="field toggle-field">
+        <label class="toggle-wrap" for="idempotency_lock_input">
+          <span class="toggle-text">
+            <span class="toggle-title">🔒 Защита от двойной отправки</span>
+            <span class="toggle-hint">Один лид = одно сообщение в день. Выкл — можно повторять (для тестов).</span>
+          </span>
+          <input type="checkbox" id="idempotency_lock_input">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
+
+      <div class="field toggle-field">
+        <label class="toggle-wrap" for="ai_rephrase_input">
+          <span class="toggle-text">
+            <span class="toggle-title">✨ ИИ-перефраз сообщений</span>
+            <span class="toggle-hint">Llama 3.1 (Groq, бесплатно) переписывает каждое сообщение чуть по-разному — ломает шаблонный fingerprint, снижает риск бана WA. Требует Groq API credential в n8n.</span>
+          </span>
+          <input type="checkbox" id="ai_rephrase_input">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
     </div>
 
-    <div class="field toggle-field">
-      <label class="toggle-wrap" for="idempotency_lock_input">
-        <span class="toggle-text">
-          <span class="toggle-title">🔒 Защита от двойной отправки</span>
-          <span class="toggle-hint">Один лид = одно сообщение в день. Выкл — можно повторять (для тестов).</span>
-        </span>
-        <input type="checkbox" id="idempotency_lock_input">
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      </label>
-    </div>
+    <!-- Технические — свёрнуты по умолчанию -->
+    <details class="settings-collapse">
+      <summary>
+        <span class="settings-collapse-title">🔗 Webhook URLs (n8n)</span>
+        <span class="settings-collapse-meta">8 endpoint'ов</span>
+        <svg class="settings-collapse-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </summary>
+      <div class="settings-collapse-body">
+        <div class="field">
+          <label>GET — список лидов</label>
+          <input type="text" id="wh_leads" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>GET — статистика</label>
+          <input type="text" id="wh_stats" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>POST — запустить парсинг</label>
+          <input type="text" id="wh_refresh" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>POST — обновить статус</label>
+          <input type="text" id="wh_status" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>POST — сохранить заметку</label>
+          <input type="text" id="wh_note_input" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>POST — обогатить через 2GIS</label>
+          <input type="text" id="wh_enrich" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>POST — найти ЛПР</label>
+          <input type="text" id="wh_lpr_input" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>POST — запустить рассылку WhatsApp</label>
+          <input type="text" id="wh_outreach_input" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label>POST — превью AI без отправки</label>
+          <input type="text" id="wh_outreach_preview_input" placeholder="https://...">
+        </div>
+      </div>
+    </details>
 
     <div class="actions">
       <button onclick="closeModal()">Отмена</button>
@@ -1322,19 +1566,40 @@
         </div>
         <textarea id="outreachMessage" class="oa-textarea" rows="6" placeholder="Здравствуйте! Меня зовут ..." oninput="updateOaPreview()"></textarea>
         <div class="oa-char-counter" id="oaCharCounter">0 симв.</div>
+
+        <!-- Кнопка генерации (видна только при включённом AI-перефразе) -->
+        <div class="oa-generate-bar" id="oaGenerateBar" style="display:none;">
+          <button class="oa-generate-btn" id="oaGenerateBtn" onclick="oaGenerateAll()">
+            <svg id="oaGenerateIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+              <path d="M19 14l.75 2.25L22 17l-2.25.75L19 20l-.75-2.25L16 17l2.25-.75L19 14z"/>
+            </svg>
+            <span id="oaGenerateBtnLabel">Сгенерировать AI для всех</span>
+          </button>
+          <span class="oa-generate-status" id="oaGenerateStatus">Llama 3.1 перепишет каждое сообщение чуть по-разному</span>
+        </div>
       </div>
+
       <!-- Превью -->
       <div id="oaPreviewSection" style="display:none;">
-        <div class="oa-section-head">
-          <span class="oa-section-label">Превью</span>
-          <div class="oa-preview-controls">
+        <div class="oa-preview-head">
+          <div class="oa-preview-head-left">
+            <span class="oa-section-label">Превью</span>
+            <span id="oaPreviewBadge" class="oa-preview-badge"></span>
+          </div>
+          <div class="oa-preview-head-right">
             <span class="oa-preview-for" id="oaPreviewFor"></span>
             <button class="oa-nav-btn" onclick="oaPreviewPrev()" title="Предыдущий лид">‹</button>
             <span class="oa-preview-nav" id="oaPreviewNav"></span>
             <button class="oa-nav-btn" onclick="oaPreviewNext()" title="Следующий лид">›</button>
           </div>
         </div>
-        <div class="oa-preview-box" id="oaPreviewBox"></div>
+        <textarea class="oa-preview-edit" id="oaPreviewEdit" rows="6" oninput="oaPreviewEdited()" placeholder="Сообщение, которое уйдёт этому лиду..."></textarea>
+        <div class="oa-preview-actions">
+          <button class="oa-preview-action-btn" onclick="oaRegenerateCurrent()" title="Перегенерировать только этого лида через AI">🔄 Регенерировать</button>
+          <button class="oa-preview-action-btn" onclick="oaResetCurrent()" title="Сбросить к исходному шаблону">↶ Сбросить к шаблону</button>
+          <span class="oa-preview-edit-hint" id="oaPreviewEditHint"></span>
+        </div>
         <div class="oa-preview-warn" id="oaPreviewWarn" style="display:none;"></div>
       </div>
     </div>
@@ -1367,12 +1632,16 @@ const DEFAULT_CONFIG = {
   wh_lpr:      'https://amiraskar2308.app.n8n.cloud/webhook/find-lpr',
   wh_note:     'https://amiraskar2308.app.n8n.cloud/webhook/lead-note',
   wh_outreach: 'https://amiraskar2308.app.n8n.cloud/webhook/outreach',
+  wh_outreach_preview: 'https://amiraskar2308.app.n8n.cloud/webhook/outreach-preview',
   // Дневной лимит первичных WA-сообщений — защита от бана аккаунта.
   // По умолчанию 80/сутки — консервативная цифра для не-warm-up аккаунта.
   wa_daily_limit: 80,
   // Защита от двойной отправки одному лиду в один день. Реализована через
   // idempotency_key на бэке. Можно выключить для тестов/повторов.
   idempotency_lock: true,
+  // ИИ перефразирует каждое сообщение, чтобы ломать шаблонный fingerprint
+  // (защита от WhatsApp anti-spam). Требует Anthropic credential в n8n.
+  ai_rephrase: false,
 };
 
 
@@ -1466,6 +1735,18 @@ function normalizePhone(phone) {
   if (d.startsWith('8') && d.length === 11) d = '7' + d.slice(1);
   if (d.length === 10) d = '7' + d;
   return d;
+}
+
+// Если строка ВСЯ в верхнем регистре ("БОСТАН", "QUWATT", "OPATRA LONDON") —
+// приводим в нормальный регистр (первая буква каждого слова заглавная).
+// Если уже есть строчные буквы ("NeuroKids", "AlemSport", "1Fit") — НЕ трогаем,
+// потому что там осмысленная капитализация.
+function smartCase(s) {
+  if (!s) return '';
+  // Уже содержит строчные буквы → оставляем как есть
+  if (/[a-zа-яё]/.test(s)) return s;
+  // Все заглавные → title-case по словам
+  return s.replace(/(\S)(\S*)/g, (_, first, rest) => first + rest.toLowerCase());
 }
 
 // Извлекает имя из ФИО для дружелюбного обращения в сообщении.
@@ -1676,8 +1957,10 @@ function openSettings() {
   document.getElementById('wh_lpr_input').value    = config.wh_lpr      || '';
   document.getElementById('wh_note_input').value   = config.wh_note     || '';
   document.getElementById('wh_outreach_input').value = config.wh_outreach || '';
+  document.getElementById('wh_outreach_preview_input').value = config.wh_outreach_preview || '';
   document.getElementById('wa_daily_limit_input').value = config.wa_daily_limit ?? 80;
   document.getElementById('idempotency_lock_input').checked = config.idempotency_lock !== false;
+  document.getElementById('ai_rephrase_input').checked = config.ai_rephrase === true;
   document.getElementById('settingsModal').classList.add('open');
 }
 function closeModal() { document.getElementById('settingsModal').classList.remove('open'); }
@@ -1690,9 +1973,11 @@ function saveSettings() {
   config.wh_lpr      = document.getElementById('wh_lpr_input').value.trim();
   config.wh_note     = document.getElementById('wh_note_input').value.trim();
   config.wh_outreach = document.getElementById('wh_outreach_input').value.trim();
+  config.wh_outreach_preview = document.getElementById('wh_outreach_preview_input').value.trim();
   const parsedLimit = parseInt(document.getElementById('wa_daily_limit_input').value, 10);
   config.wa_daily_limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 80;
   config.idempotency_lock = document.getElementById('idempotency_lock_input').checked;
+  config.ai_rephrase      = document.getElementById('ai_rephrase_input').checked;
   saveConfig();
   closeModal();
   toast('Настройки сохранены', 'success');
@@ -2173,13 +2458,13 @@ document.getElementById('funnelModal').addEventListener('click', e => {
    ========================================================================= */
 
 const OUTREACH_DEFAULT_MSG =
-`Здравствуйте, {{name}}!
+`{{name}} приветствую,
 
-Меня зовут Амир, компания AI Closer.
+Вижу что вы активно выстраиваете отдел продаж в компании {{company}}.
 
-Увидел, что в {{company}} ищете {{vacancy}} — мы помогаем командам продаж автоматизировать первичную обработку заявок с помощью AI.
+Хотел бы внести свой вклад в ваш бизнес и помочь отделу продаж с повышением конверсии/дохода.
 
-Удобно пообщаться 5 минут?`;
+Интересно?`;
 
 let _oaSelectedIds = new Set();
 
@@ -2339,13 +2624,18 @@ function _oaUpdateCount() {
   let line = parts.length ? parts.join(' · ') + ' — пропущены' : '';
   const dailyLine = `Сегодня: ${sentToday}/${limit} (осталось ${remaining})`;
   const note = document.getElementById('oaSkippedNote');
-  // Префикс — предупреждение если защита от двойной отправки выключена
-  const unlocked = config.idempotency_lock === false;
-  if (unlocked) {
-    note.innerHTML = `<span class="oa-warn-badge">⚠ Защита от двойной отправки ВЫКЛ</span> · ${esc(dailyLine)}${line ? ' · ' + esc(line) : ''}`;
-  } else {
-    note.textContent = line ? `${dailyLine} · ${line}` : dailyLine;
+
+  // Префикс-плашки в зависимости от активных режимов
+  const badges = [];
+  if (config.idempotency_lock === false) {
+    badges.push('<span class="oa-warn-badge">⚠ Двойная отправка ВКЛ</span>');
   }
+  if (config.ai_rephrase === true) {
+    badges.push('<span class="oa-ai-badge">✨ AI-перефраз</span>');
+  }
+  const prefix = badges.length ? badges.join(' ') + ' · ' : '';
+  const tail   = line ? ' · ' + esc(line) : '';
+  note.innerHTML = prefix + esc(dailyLine) + tail;
 }
 
 function oaToggleLead(id, row) {
@@ -2381,8 +2671,13 @@ function oaInsertVar(v) {
 }
 
 // Индекс лида, для которого сейчас рендерится превью.
-// Меняется кнопками < / > в шапке превью.
 let _oaPreviewIndex = 0;
+
+// Pre-generated сообщения: lead_id → { message, ai_used, edited, source }
+// source: 'template' | 'ai' | 'edited' | 'fallback'
+const _oaGenerated = new Map();
+// Снапшот шаблона на момент генерации — чтобы понимать, не устарели ли генерации
+let _oaGeneratedFromTemplate = '';
 
 function _oaSelectedList() {
   return _oaGetPool().filter(l => _oaSelectedIds.has(String(l.id)));
@@ -2391,8 +2686,8 @@ function _oaSelectedList() {
 function _oaRenderTemplate(template, lead) {
   return template
     .replace(/{{name}}/g,     firstName(lead.director))
-    .replace(/{{director}}/g, lead.director || '')
-    .replace(/{{company}}/g,  lead.company  || '')
+    .replace(/{{director}}/g, smartCase(lead.director || ''))  // ФИО из реестра обычно CAPS
+    .replace(/{{company}}/g,  smartCase(lead.company  || ''))  // компания из реестра — тоже CAPS
     .replace(/{{vacancy}}/g,  lead.vacancy  || '')
     .replace(/{{city}}/g,     lead.city     || '');
 }
@@ -2429,16 +2724,29 @@ function oaPreviewNext() {
 }
 
 function updateOaPreview() {
-  const section = document.getElementById('oaPreviewSection');
-  const box     = document.getElementById('oaPreviewBox');
-  const forEl   = document.getElementById('oaPreviewFor');
-  const navEl   = document.getElementById('oaPreviewNav');
-  const warnEl  = document.getElementById('oaPreviewWarn');
+  const section   = document.getElementById('oaPreviewSection');
+  const editArea  = document.getElementById('oaPreviewEdit');
+  const forEl     = document.getElementById('oaPreviewFor');
+  const navEl     = document.getElementById('oaPreviewNav');
+  const warnEl    = document.getElementById('oaPreviewWarn');
+  const badge     = document.getElementById('oaPreviewBadge');
+  const hint      = document.getElementById('oaPreviewEditHint');
   const counterEl = document.getElementById('oaCharCounter');
-  const msg     = (document.getElementById('outreachMessage').value || '').trim();
+  const genBar    = document.getElementById('oaGenerateBar');
+  const msg       = (document.getElementById('outreachMessage').value || '').trim();
 
-  // Счётчик символов (показывает длину шаблона, не отрендеренного сообщения —
-  // конкретное сообщение всё равно зависит от лида)
+  // Show/hide Generate-кнопки по наличию ai_rephrase в конфиге
+  if (genBar) {
+    genBar.style.display = (config.ai_rephrase === true) ? 'flex' : 'none';
+  }
+
+  // Если шаблон изменился относительно момента генерации — генерации устарели, сбрасываем.
+  if (_oaGenerated.size > 0 && msg !== _oaGeneratedFromTemplate) {
+    _oaGenerated.clear();
+    _oaGeneratedFromTemplate = '';
+  }
+
+  // Счётчик символов
   if (counterEl) {
     const len = msg.length;
     counterEl.textContent = `${len} симв.`;
@@ -2450,29 +2758,210 @@ function updateOaPreview() {
 
   const selected = _oaSelectedList();
   if (selected.length === 0) {
-    box.textContent = msg;
-    forEl.textContent = ''; navEl.textContent = ''; warnEl.textContent = '';
+    editArea.value = msg;
+    editArea.disabled = true;
+    forEl.textContent = ''; navEl.textContent = '';
+    badge.textContent = ''; badge.className = 'oa-preview-badge';
+    if (hint) hint.textContent = '';
+    if (warnEl) { warnEl.textContent = ''; warnEl.style.display = 'none'; }
     return;
   }
 
   if (_oaPreviewIndex >= selected.length) _oaPreviewIndex = 0;
   const lead = selected[_oaPreviewIndex];
+  const lid  = String(lead.id);
 
-  box.textContent = _oaRenderTemplate(msg, lead);
+  // Источник сообщения:
+  //   1. Пре-сгенерированное (с AI или отредактированное оператором) → берём из map
+  //   2. Иначе → рендер шаблона
+  let displayMessage, source;
+  if (_oaGenerated.has(lid)) {
+    const g = _oaGenerated.get(lid);
+    // Защита от undefined/пустого: если бэк прислал пустоту — показываем шаблон
+    if (!g.message || !String(g.message).trim()) {
+      displayMessage = _oaRenderTemplate(msg, lead);
+      source = 'fallback';
+    } else {
+      displayMessage = String(g.message);
+      source = g.edited ? 'edited' : (g.ai_used ? 'ai' : 'fallback');
+    }
+  } else {
+    displayMessage = _oaRenderTemplate(msg, lead);
+    source = 'template';
+  }
+
+  editArea.value = displayMessage;
+  editArea.disabled = false;
   forEl.textContent = `для: ${lead.company || lead.phone}`;
   navEl.textContent = `${_oaPreviewIndex + 1} / ${selected.length}`;
 
-  // Предупреждения о пустых переменных у всей выборки
+  // Бейдж источника
+  const labels = {
+    template: 'шаблон',
+    ai:       '✨ AI',
+    edited:   '✏ изменено',
+    fallback: 'AI отказ → шаблон',
+  };
+  badge.textContent = labels[source];
+  badge.className = 'oa-preview-badge ' + source;
+
+  if (hint) {
+    if (source === 'edited')   hint.textContent = 'вы отредактировали этот текст';
+    else if (source === 'ai')  hint.textContent = 'AI-перефраз — можно редактировать';
+    else if (source === 'fallback') hint.textContent = 'AI не прошёл валидацию, отправим шаблон';
+    else                        hint.textContent = 'базовый шаблон (нажми «Сгенерировать»)';
+  }
+
+  // Предупреждения о пустых переменных
   const missing = _oaCheckMissing(msg, selected);
   if (missing.length === 0) {
-    warnEl.textContent = '';
-    warnEl.style.display = 'none';
+    warnEl.textContent = ''; warnEl.style.display = 'none';
   } else {
     warnEl.style.display = '';
     warnEl.innerHTML = missing.map(m =>
       `<span class="oa-warn-pill">${m.name}: ${m.empty} лидов без данных</span>`
     ).join(' ');
   }
+}
+
+// Оператор отредактировал превью текущего лида в textarea
+function oaPreviewEdited() {
+  const selected = _oaSelectedList();
+  if (selected.length === 0) return;
+  const lead = selected[_oaPreviewIndex];
+  const lid  = String(lead.id);
+  const newText = document.getElementById('oaPreviewEdit').value;
+  // Сохраняем как ручную правку — НЕ AI
+  _oaGenerated.set(lid, { message: newText, ai_used: false, edited: true });
+  if (!_oaGeneratedFromTemplate) {
+    _oaGeneratedFromTemplate = document.getElementById('outreachMessage').value.trim();
+  }
+  // Обновляем только бейдж и hint, без перерисовки textarea (чтобы курсор не прыгал)
+  const badge = document.getElementById('oaPreviewBadge');
+  const hint  = document.getElementById('oaPreviewEditHint');
+  badge.textContent = '✏ изменено';
+  badge.className   = 'oa-preview-badge edited';
+  if (hint) hint.textContent = 'вы отредактировали этот текст';
+}
+
+// Сбросить превью текущего лида к шаблону
+function oaResetCurrent() {
+  const selected = _oaSelectedList();
+  if (selected.length === 0) return;
+  const lead = selected[_oaPreviewIndex];
+  _oaGenerated.delete(String(lead.id));
+  updateOaPreview();
+}
+
+// Перегенерировать AI для текущего лида в превью
+async function oaRegenerateCurrent() {
+  const selected = _oaSelectedList();
+  if (selected.length === 0) return;
+  const lead = selected[_oaPreviewIndex];
+  if (!config.wh_outreach_preview) {
+    toast('Webhook /outreach-preview не настроен в Settings', true);
+    return;
+  }
+  const template = document.getElementById('outreachMessage').value.trim();
+  if (!template) { toast('Шаблон пустой', true); return; }
+
+  const hint = document.getElementById('oaPreviewEditHint');
+  if (hint) hint.textContent = '⏳ перегенерирую…';
+
+  try {
+    const r = await _oaCallPreviewEndpoint([lead], template);
+    const result = r.results && r.results[0];
+    if (!result) throw new Error('AI не вернул ответ');
+    _oaGenerated.set(String(lead.id), {
+      message: result.message,
+      ai_used: result.ai_used === true,
+      edited: false,
+    });
+    _oaGeneratedFromTemplate = template;
+    updateOaPreview();
+  } catch (e) {
+    if (hint) hint.textContent = 'Ошибка: ' + e.message;
+  }
+}
+
+// Сгенерировать AI-варианты для всей выборки разом
+async function oaGenerateAll() {
+  const selected = _oaSelectedList();
+  if (selected.length === 0) {
+    toast('Сначала выбери лидов', true); return;
+  }
+  if (!config.wh_outreach_preview) {
+    toast('Webhook /outreach-preview не настроен в Settings', true); return;
+  }
+  const template = document.getElementById('outreachMessage').value.trim();
+  if (!template) { toast('Шаблон пустой', true); return; }
+
+  const btn   = document.getElementById('oaGenerateBtn');
+  const icon  = document.getElementById('oaGenerateIcon');
+  const label = document.getElementById('oaGenerateBtnLabel');
+  const stat  = document.getElementById('oaGenerateStatus');
+  const origLabel = label.textContent;
+  const origStatus = stat.textContent;
+
+  btn.disabled = true;
+  if (icon) icon.classList.add('spin');
+  label.textContent = `Генерирую…`;
+  stat.textContent  = `Llama пишет ${selected.length} сообщений, ~1 сек на каждое`;
+  stat.className = 'oa-generate-status';
+
+  try {
+    const r = await _oaCallPreviewEndpoint(selected, template);
+    const results = Array.isArray(r.results) ? r.results : [];
+    let aiCount = 0, fallbackCount = 0, emptyCount = 0;
+    for (const res of results) {
+      const msgValid = res.message && String(res.message).trim();
+      if (!msgValid) { emptyCount++; continue; }
+      _oaGenerated.set(String(res.id), {
+        message: String(res.message),
+        ai_used: res.ai_used === true,
+        edited: false,
+      });
+      if (res.ai_used) aiCount++; else fallbackCount++;
+    }
+    _oaGeneratedFromTemplate = template;
+    const parts = [`✓ ${aiCount} AI`];
+    if (fallbackCount) parts.push(`${fallbackCount} шаблон (валидация не прошла)`);
+    if (emptyCount)    parts.push(`${emptyCount} пустых ответов`);
+    stat.textContent = parts.join(' · ');
+    stat.className = 'oa-generate-status success';
+    toast(`Сгенерировано: ${aiCount} AI, ${fallbackCount} fallback`, 'success');
+    updateOaPreview();
+  } catch (e) {
+    stat.textContent = '✗ ' + e.message;
+    stat.className = 'oa-generate-status error';
+    toast('Ошибка генерации: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    if (icon) icon.classList.remove('spin');
+    label.textContent = origLabel;
+  }
+}
+
+// Внутренний вызов /outreach-preview endpoint'а
+async function _oaCallPreviewEndpoint(leads, template) {
+  const payload = {
+    leads: leads.map(l => ({
+      id:       String(l.id),
+      name:     firstName(l.director),
+      // smartCase — чтобы валидатор бэка искал в выводе именно "Бостан", не "БОСТАН"
+      company:  smartCase(l.company  || ''),
+      director: smartCase(l.director || ''),
+      vacancy:  l.vacancy  || '',
+      message:  _oaRenderTemplate(template, l),
+    })),
+  };
+  const res = await fetch(config.wh_outreach_preview, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
 }
 
 function openOutreachModal() {
@@ -2483,7 +2972,11 @@ function openOutreachModal() {
 
   // По умолчанию пресекаем все валидные лиды
   _oaSelectedIds = new Set(_oaGetPool().map(l => String(l.id)));
-  _oaPreviewIndex = 0;   // превью с первого лида
+  _oaPreviewIndex = 0;
+  // Сбрасываем pre-generated кеш — чтобы оператор не путал предыдущие правки
+  // с текущей сессией. Если он хочет — нажмёт «Сгенерировать» заново.
+  _oaGenerated.clear();
+  _oaGeneratedFromTemplate = '';
   _oaRenderLeads();
 
   const ta = document.getElementById('outreachMessage');
@@ -2520,21 +3013,34 @@ async function runOutreach() {
     return;
   }
 
+  // Для каждого лида решаем какое сообщение отправляем:
+  //   1. Есть в _oaGenerated (предсгенерировано AI или отредактировано) → берём оттуда
+  //   2. Иначе → рендерим шаблон со substitutions
   const leads = _oaGetPool()
     .filter(l => _oaSelectedIds.has(String(l.id)))
-    .map(l => ({
-      id:      String(l.id),
-      phone:   l.phone,
-      company: l.company  || '',
-      director:l.director || '',
-      vacancy: l.vacancy  || '',
-      message: messageTemplate
-        .replace(/{{name}}/g,     firstName(l.director))
-        .replace(/{{director}}/g, l.director || '')
-        .replace(/{{company}}/g,  l.company  || '')
-        .replace(/{{vacancy}}/g,  l.vacancy  || '')
-        .replace(/{{city}}/g,     l.city     || ''),
-    }));
+    .map(l => {
+      const lid = String(l.id);
+      const cached = _oaGenerated.get(lid);
+      const message = cached
+        ? cached.message                                       // pre-generated / edited
+        : messageTemplate
+            .replace(/{{name}}/g,     firstName(l.director))
+            .replace(/{{director}}/g, l.director || '')
+            .replace(/{{company}}/g,  l.company  || '')
+            .replace(/{{vacancy}}/g,  l.vacancy  || '')
+            .replace(/{{city}}/g,     l.city     || '');
+      return {
+        id:      lid,
+        phone:   l.phone,
+        name:    firstName(l.director),
+        company: smartCase(l.company  || ''),
+        director:smartCase(l.director || ''),
+        vacancy: l.vacancy  || '',
+        message,
+      };
+    });
+  // Сколько уже сгенерировано/отредактировано — отправляем как готовое
+  const preGeneratedCount = leads.filter(l => _oaGenerated.has(l.id)).length;
 
   const btn = document.getElementById('outreachRunBtn');
   const origHtml = btn.innerHTML;
@@ -2545,17 +3051,30 @@ async function runOutreach() {
     const res = await fetch(config.wh_outreach, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      // force=true означает "выключить idempotency-защиту" на бэке.
-      // Это управляется тумблером в Settings: idempotency_lock включён → force=false.
-      body: JSON.stringify({ leads, force: config.idempotency_lock === false }),
+      // force=true       → выключает idempotency-защиту
+      // ai_rephrase=true  → бэк прогонит каждое сообщение через AI повторно
+      //                     НО: если ВСЕ лиды уже pre-generated (через oaGenerateAll),
+      //                     отправляем как есть, без повторной обработки.
+      body: JSON.stringify({
+        leads,
+        force:       config.idempotency_lock === false,
+        ai_rephrase: config.ai_rephrase === true && preGeneratedCount < leads.length,
+      }),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json().catch(() => ({}));
-    const sent   = data.sent   ?? leads.length;
-    const errors = data.errors ?? 0;
-    toast(`✅ Отправлено: ${sent}${errors ? `, ошибок: ${errors}` : ''}`, 'success');
+    // Бэк отвечает СРАЗУ после Reserve Slot, Send Loop крутится в фоне с задержками
+    // 45-120 сек на сообщение. Поэтому показываем "запущено в фоне", и периодически
+    // refetch'им чтобы видеть как статусы (sent) появляются в реальном времени.
+    const queued = data.queued ?? leads.length;
+    const avgDelaySec = 90;
+    const expectedMinutes = Math.ceil(queued * avgDelaySec / 60);
+    toast(`📤 Запущено ${queued} отправок. Идут с задержкой 45-120 сек, ~${expectedMinutes} мин на всё.`, 'success');
     closeOutreachModal();
+    // Refetch несколько раз — статусы будут проявляться постепенно
     setTimeout(() => fetchLeads({ showSkeleton: false, preserveScroll: true }), 5000);
+    setTimeout(() => fetchLeads({ showSkeleton: false, preserveScroll: true }), 60000);
+    setTimeout(() => fetchLeads({ showSkeleton: false, preserveScroll: true }), 5*60000);
   } catch (e) {
     toast('Ошибка: ' + e.message, true);
   } finally {
@@ -2707,6 +3226,8 @@ function render() {
       updateStatusFilter();
       if (gen !== _renderGeneration) return;
       updatePillCounts();
+      if (gen !== _renderGeneration) return;
+      updatePresetCounts();
     });
   });
 }
@@ -2965,6 +3486,9 @@ function openDrawer(id) {
    NOTES — autosave + индикатор в строке
    ========================================================================= */
 let notesSaveTimer = null;
+// Pending state — чтобы closeDrawer() мог форсануть save если оператор закрыл
+// drawer не дождавшись blur/debounce. Без этого ESC во время печати теряет текст.
+let _notesPending = null;  // { id, value }
 
 function setupNotesEditor(lead) {
   const ta = document.getElementById('leadNotes');
@@ -2972,6 +3496,7 @@ function setupNotesEditor(lead) {
   if (!ta) return;
 
   ta.value = lead.notes || '';
+  _notesPending = null;
   status.textContent = '';
   status.className = 'notes-status';
 
@@ -2984,18 +3509,32 @@ function setupNotesEditor(lead) {
     clearTimeout(notesSaveTimer);
     status.textContent = 'Не сохранено...';
     status.className = 'notes-status';
+    // Запоминаем что есть несохранённое — closeDrawer проверит и сохранит
+    _notesPending = { id: String(lead.id), value: fresh.value };
     notesSaveTimer = setTimeout(() => {
-      saveNotes(String(lead.id), fresh.value);
+      saveNotes(_notesPending.id, _notesPending.value);
+      _notesPending = null;
     }, 1200);
   });
 
-  // Сохранить сразу при потере фокуса (если есть несохранённые изменения)
   fresh.addEventListener('blur', () => {
     if (notesSaveTimer) {
       clearTimeout(notesSaveTimer);
       saveNotes(String(lead.id), fresh.value);
+      _notesPending = null;
     }
   });
+}
+
+// Вызывается из closeDrawer перед его закрытием.
+// Если есть несохранённое — синхронно отправляет save, чтобы текст не потерялся
+// при ESC / клике вне drawer'а во время печати.
+function _flushPendingNotes() {
+  if (_notesPending && notesSaveTimer) {
+    clearTimeout(notesSaveTimer);
+    saveNotes(_notesPending.id, _notesPending.value);
+    _notesPending = null;
+  }
 }
 
 async function saveNotes(id, notes) {
@@ -3048,6 +3587,7 @@ function updateNoteIndicator(id, notes) {
   }
 }
 function closeDrawer() {
+  _flushPendingNotes();   // ESC при печати — синхронно сохраняем
   openLeadId = null;
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawerOverlay').classList.remove('open');
@@ -3388,6 +3928,122 @@ function setLastUpdate() {
   const t = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   document.getElementById('lastUpdate').textContent = 'обновлено ' + t;
 }
+// ─── Quick-filter presets ───────────────────────────────────────────────────
+// Декларативные конфиги пресетов — фильтры применяются разом по клику.
+// Если кликнуть на уже активный пресет — сбрасывается (toggle).
+const PRESETS = {
+  sales_ready: {
+    // РОПы готовые к рассылке: руководители продаж + WhatsApp + есть ЛПР + new
+    category: 'sales',
+    has: ['whatsapp', 'director'],
+    status: 'new',
+  },
+  icp_ready: {
+    // Любой ICP-лид с WA и ЛПР для рассылки (категория не фиксируется — оператор сам выбирает)
+    has: ['whatsapp', 'director'],
+    status: 'new',
+  },
+  need_lpr: {
+    // Есть телефон, ЛПР не найден — кандидаты для запуска find-lpr
+    has: ['phone', 'no_lpr'],
+    status: 'new',
+  },
+  no_reply: {
+    // Отправили, ответа нет — для возможного follow-up
+    has: [],
+    status: 'sent',
+  },
+};
+
+// Определяет — какой пресет (если есть) сейчас активен. Используется для подсветки кнопки.
+function _currentPresetId() {
+  const current = {
+    category: filters.position || '',
+    has: Array.isArray(filters.has) ? [...filters.has].sort() : [],
+    status: filters.status || '',
+  };
+  for (const [id, preset] of Object.entries(PRESETS)) {
+    const target = {
+      category: preset.category || '',
+      has: [...(preset.has || [])].sort(),
+      status: preset.status || '',
+    };
+    if (current.category === target.category &&
+        current.status   === target.status &&
+        current.has.length === target.has.length &&
+        current.has.every((v, i) => v === target.has[i])) {
+      return id;
+    }
+  }
+  return null;
+}
+
+function applyPreset(id) {
+  const preset = PRESETS[id];
+  if (!preset) return;
+  // Toggle: если этот пресет уже активен — сбрасываем
+  if (_currentPresetId() === id) {
+    resetFilters();
+    return;
+  }
+  // Сбрасываем все фильтры до дефолта, потом накладываем пресет
+  filters = {
+    search: '', position: '', city: '', rubric: '', status: '',
+    has: [], date: 0,
+  };
+  if (preset.category) filters.position = preset.category;
+  if (preset.has) filters.has = [...preset.has];
+  if (preset.status) filters.status = preset.status;
+
+  // Синхронизируем UI: dropdown'ы и pill-кнопки
+  document.getElementById('searchInput').value = '';
+  document.querySelector('.search-wrap')?.classList.remove('has-text');
+  document.getElementById('filterPosition').value = filters.position || '';
+  document.getElementById('filterCity').value     = '';
+  document.getElementById('filterRubric').value   = '';
+  document.getElementById('filterStatus').value   = filters.status || '';
+
+  // Date pills → "За всё время"
+  document.querySelectorAll('.dpill').forEach(b => b.classList.remove('dpill-active'));
+  document.querySelector('.dpill[data-days="0"]')?.classList.add('dpill-active');
+
+  // Contact pills syncs automatically через updatePillCounts (читает filters.has)
+  render();
+}
+
+// Считает кол-во лидов под каждый пресет (показывается в счётчике на кнопке)
+function updatePresetCounts() {
+  for (const [id, preset] of Object.entries(PRESETS)) {
+    let count = 0;
+    for (const l of allLeads) {
+      if (preset.category && l.category !== preset.category) continue;
+      if (preset.status && l.status !== preset.status) continue;
+      let allHas = true;
+      for (const h of (preset.has || [])) {
+        if (h === 'phone'    && !l.phone)    { allHas = false; break; }
+        if (h === 'email'    && !l.email)    { allHas = false; break; }
+        if (h === 'director' && !l.director) { allHas = false; break; }
+        if (h === 'no_lpr'   && l.director)  { allHas = false; break; }
+        if (h === 'no_contacts' && (l.phone || l.email || l.website)) { allHas = false; break; }
+        if (h === 'whatsapp') {
+          const all = l.phone_extra ? [l.phone, ...String(l.phone_extra).split(',')] : [l.phone];
+          if (!all.some(p => phoneType(p) === 'mobile')) { allHas = false; break; }
+        }
+      }
+      if (allHas) count++;
+    }
+    const btn = document.querySelector(`.preset-btn[data-preset="${id}"]`);
+    const span = btn?.querySelector('.preset-count');
+    if (span) span.textContent = count;
+    if (btn) btn.classList.toggle('is-empty', count === 0);
+  }
+  // Подсветка активного пресета
+  const activeId = _currentPresetId();
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.preset === activeId);
+  });
+}
+
 function resetFilters() {
   filters = { search:'', position:'', city:'', rubric:'', status:'', has:[], date:0 };
   document.getElementById('searchInput').value = '';
